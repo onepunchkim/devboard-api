@@ -54,6 +54,6 @@ public class PostService {
     //게시글 조회 공통 logic
     private Post findPostById(Long id) {
         return postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다. ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없이습니다. ID: " + id));
     }
 }
