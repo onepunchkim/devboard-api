@@ -1,5 +1,7 @@
 package com.example.devboard.controller;
 
+import com.example.devboard.dto.MemberLoginRequest;
+import com.example.devboard.dto.MemberLoginResponse;
 import com.example.devboard.dto.MemberSignupRequest;
 import com.example.devboard.entity.Member;
 import com.example.devboard.service.MemberService;
@@ -43,5 +45,12 @@ public class MemberController {
                     e.getMessage()
             );
         }
+    }
+
+    @PostMapping("/login")
+    public MemberLoginResponse login(
+            @Valid @RequestBody MemberLoginRequest request
+    ) {
+        return memberService.login(request);
     }
 }
