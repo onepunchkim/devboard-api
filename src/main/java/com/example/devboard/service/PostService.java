@@ -1,9 +1,14 @@
 package com.example.devboard.service;
 
+import com.example.devboard.dto.PostResponse;
+import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
+import com.example.devboard.repository.MemberRepository;
 import com.example.devboard.repository.PostRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -12,48 +17,84 @@ import java.util.List;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final MemberRepository memberRepository;
 
-    public PostService(PostRepository postRepository) {
+    public PostService(PostRepository postRepository, MemberRepository memberRepository) {
         this.postRepository = postRepository;
+        this.memberRepository = memberRepository;
     }
 
     //게시글 생성
     @Transactional
-    public Post createPost(String title, String content) {
-        Post post = new Post(title, content);
-        return postRepository.save(post);
+    public PostResponse createPost(String title, String content, String email) {
+        Member member = findMemberByEmail(email);
+        Post post = new Post(title, content, member);
+        Post savedPost = postRepository.save(post);
+        return PostResponse.from(savedPost);
     }
 
     //전체 게시글 조회
-    public List<Post> getPosts() {
-        return postRepository.findAll();
+    public List<PostResponse> getPosts() {
+        return postRepository.findAll()
+                .stream()
+                .map(PostResponse::from)
+                .toList();
     }
 
     //특정 게시글 조회
-    public Post getPost(Long id) {
-        return findPostById(id);
+    public PostResponse getPost(Long id) {
+        Post post = findPostById(id);
+        return PostResponse.from(post);
     }
 
-    //게시글 수정
+    //게시글 수정(작성자만 가능)
     @Transactional
-    public Post updatePost(Long id, String title, String content) {
+    public PostResponse updatePost(Long id, String title, String content, String email) {
         Post post = findPostById(id);
+        Member member = findMemberByEmail(email);
+
+        validateOwner(post, member);
         post.update(title, content);
 
         //변경감지 (Dirty checking) 으로 업데이트 됨
-        return post;
+        return PostResponse.from(post);
+
     }
 
-    //게시글 삭제
+    //게시글 삭제(작성자만 가능)
     @Transactional
-    public void deletePost(Long id) {
+    public void deletePost(Long id, String email) {
         Post post = findPostById(id);
+        Member member = findMemberByEmail(email);
+
+        validateOwner(post, member);
         postRepository.delete(post);
+    }
+
+    // 회원 조회
+    private Member findMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "인증된 회원을 찾을 수 없습니다."
+                ));
     }
 
     //게시글 조회 공통 logic
     private Post findPostById(Long id) {
         return postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다. ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "게시글을 찾을 수 없습니다. ID: " + id));
+    }
+
+    //작성자 권한 확인
+    private void validateOwner(Post post, Member member) {
+        if (post.getMember() == null || !post.getMember().getId().equals(member.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "본인이 작성한 게시글만 수정하거나 삭제할 수 있습니다."
+            );
+        }
     }
 }

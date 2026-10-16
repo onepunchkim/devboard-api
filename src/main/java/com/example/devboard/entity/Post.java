@@ -25,14 +25,19 @@ public class Post {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     //기본 생성자
     protected Post() {
     }
 
     //게시글 전용 생성자
-    public Post(String title, String content) {
+    public Post(String title, String content, Member member) {
         this.title = title;
         this.content = content;
+        this.member = member;
     }
 
 
@@ -73,5 +78,9 @@ public class Post {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Member getMember() {
+        return member;
     }
 }
