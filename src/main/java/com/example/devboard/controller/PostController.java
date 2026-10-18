@@ -38,10 +38,11 @@ public class PostController {
     //전체 게시글 조회 - 페이징
     @GetMapping
     public Page<PostResponse> findAll(
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return postService.findAll(page, size);
+        return postService.findAll(keyword, page, size);
     }
 
     //특정 게시글 조회

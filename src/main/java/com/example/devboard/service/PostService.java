@@ -40,13 +40,25 @@ public class PostService {
 
     //게시글 목록 조회 - 페이징
     @Transactional(readOnly = true)
-    public Page<PostResponse> findAll(int page, int size) {
+    public Page<PostResponse> findAll(String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        return postRepository.findAll(pageable)
-                .map(PostResponse::from);
+        Page<Post> posts;
+
+        if (keyword == null || keyword.isBlank()) {
+            //검색어가 없으면 전체 게시글 조회
+            posts = postRepository.findAll(pageable);
+        } else {
+            //검색어가 있으면 제목으로 검색
+            posts = postRepository.findByTitleContaining(
+                    keyword.trim(),
+                    pageable
+            );
+        }
+
+        return posts.map(PostResponse::from);
     }
 
     //게시글 상세
