@@ -6,12 +6,14 @@ import com.example.devboard.entity.Post;
 import com.example.devboard.repository.MemberRepository;
 import com.example.devboard.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -36,12 +38,15 @@ public class PostService {
         return PostResponse.from(postRepository.save(post));
     }
 
-    //게시글 목록
-    public List<PostResponse> findAll() {
-        return postRepository.findAll()
-                .stream()
-                .map(PostResponse::from)
-                .toList();
+    //게시글 목록 조회 - 페이징
+    @Transactional(readOnly = true)
+    public Page<PostResponse> findAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        return postRepository.findAll(pageable)
+                .map(PostResponse::from);
     }
 
     //게시글 상세

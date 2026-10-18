@@ -3,13 +3,10 @@ package com.example.devboard.controller;
 import com.example.devboard.dto.PostResponse;
 import com.example.devboard.service.PostService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -38,10 +35,13 @@ public class PostController {
         );
     }
 
-    //전체 게시글 조회
+    //전체 게시글 조회 - 페이징
     @GetMapping
-    public List<PostResponse> findAll() {
-        return postService.findAll();
+    public Page<PostResponse> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return postService.findAll(page, size);
     }
 
     //특정 게시글 조회
