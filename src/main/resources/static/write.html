@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 작성 | DevBoard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="header">
+    <a class="logo" href="/">DevBoard</a>
+    <nav>
+        <a href="/">게시글 목록</a>
+    </nav>
+</header>
+
+<main class="container">
+    <section class="board">
+        <h1 id="formTitle">게시글 작성</h1>
+        <p>개발 지식과 경험을 공유해 보세요.</p>
+
+        <form id="postForm">
+            <label for="title">제목</label>
+            <input
+                    id="title"
+                    type="text"
+                    maxlength="200"
+                    required
+                    placeholder="제목을 입력하세요"
+            >
+
+            <label for="content">내용</label>
+            <textarea
+                    id="content"
+                    rows="12"
+                    required
+                    placeholder="내용을 입력하세요"
+            ></textarea>
+
+            <div class="post-actions">
+                <button id="submitButton" class="button" type="submit">
+                    등록하기
+                </button>
+                <a class="button secondary" href="/">취소</a>
+            </div>
+
+            <p id="formMessage" role="status"></p>
+        </form>
+    </section>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/write.js"></script>
+</body>
+</html>

@@ -89,11 +89,29 @@ public class SecurityConfig {
 
                 //API별 접근 권한
                 .authorizeHttpRequests(auth -> auth
+                        //프론트엔드 정적 파일은 누구나 접근 가능
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/login.html",
+                                "/signup.html",
+                                "/post-detail.html",
+                                "/write.html",
+                                "/css/**",
+                                "/js/**",
+                                "/favicon.ico"
+                        ).permitAll()
+
+                        //회원 가입 및 로그인 API는 인증 없이 접근 가능
                         .requestMatchers(
                                 "/api/members/signup",
-                                "/api/members/login"
-                        ).permitAll()
+                                "/api/members/login")
+                        .permitAll()
+
+                        //게시글 API는 기존 JWT인증 유지
                         .requestMatchers("/api/posts/**").authenticated()
+
+                        //그 외 API는 기존 보안 정책에 맞게 처리
                         .anyRequest().permitAll())
 
                 //JWT 인증 필터 등록

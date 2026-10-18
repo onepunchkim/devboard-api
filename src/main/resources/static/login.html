@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 | DevBoard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="header">
+    <a class="logo" href="/">DevBoard</a>
+    <nav><a href="/signup.html">회원가입</a></nav>
+</header>
+
+<main class="container">
+    <section class="board">
+        <h1>로그인</h1>
+        <p>계정에 로그인하고 게시글을 작성해 보세요.</p>
+
+        <form id="loginForm">
+            <label for="email">이메일</label>
+            <input id="email" type="email" required
+                   placeholder="이메일을 입력하세요">
+
+            <label for="password">비밀번호</label>
+            <input id="password" type="password" required
+                   placeholder="비밀번호를 입력하세요">
+
+            <button class="button" type="submit">로그인</button>
+            <p id="message" role="status"></p>
+        </form>
+    </section>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+</body>
+</html>

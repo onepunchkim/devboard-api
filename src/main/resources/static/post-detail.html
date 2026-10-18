@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 상세 | DevBoard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="header">
+    <a class="logo" href="/">DevBoard</a>
+    <nav id="navMenu">
+        <a href="/">게시글 목록</a>
+    </nav>
+</header>
+
+<main class="container">
+    <section class="board">
+        <p id="detailMessage" role="status">게시글을 불러오는 중입니다.</p>
+
+        <article id="postDetail" hidden>
+            <h1 id="postTitle"></h1>
+            <p id="postDate" class="post-date"></p>
+
+            <hr>
+
+            <div id="postContent" class="post-content"></div>
+
+            <div class="post-actions">
+                <a class="button" href="/">목록으로</a>
+                <a id="editButton" class="button" href="/write.html" hidden>
+                    수정
+                </a>
+                <button id="deleteButton" class="button danger" hidden>
+                    삭제
+                </button>
+            </div>
+        </article>
+    </section>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/post-details.js"></script>
+</body>
+</html>
