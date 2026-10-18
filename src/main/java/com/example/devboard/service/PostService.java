@@ -5,6 +5,7 @@ import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
 import com.example.devboard.repository.MemberRepository;
 import com.example.devboard.repository.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,36 +25,37 @@ public class PostService {
         this.memberRepository = memberRepository;
     }
 
-    //게시글 생성
+    //게시글 작성
     @Transactional
     public PostResponse createPost(String title, String content, String email) {
-        Member member = findMemberByEmail(email);
+        System.out.println("JWT에서 전달된 이메일: [" + email + "]");
+
+        Member member = memberRepository.findByEmail(email).
+                orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다."));
         Post post = new Post(title, content, member);
-        Post savedPost = postRepository.save(post);
-        return PostResponse.from(savedPost);
+        return PostResponse.from(postRepository.save(post));
     }
 
-    //전체 게시글 조회
-    public List<PostResponse> getPosts() {
+    //게시글 목록
+    public List<PostResponse> findAll() {
         return postRepository.findAll()
                 .stream()
                 .map(PostResponse::from)
                 .toList();
     }
 
-    //특정 게시글 조회
-    public PostResponse getPost(Long id) {
-        Post post = findPostById(id);
+    //게시글 상세
+    public PostResponse findById(Long id) {
+        Post post = findPost(id);
         return PostResponse.from(post);
     }
 
     //게시글 수정(작성자만 가능)
     @Transactional
     public PostResponse updatePost(Long id, String title, String content, String email) {
-        Post post = findPostById(id);
-        Member member = findMemberByEmail(email);
+        Post post = findPost(id);
+        validateOwner(post, email);
 
-        validateOwner(post, member);
         post.update(title, content);
 
         //변경감지 (Dirty checking) 으로 업데이트 됨
@@ -64,11 +66,18 @@ public class PostService {
     //게시글 삭제(작성자만 가능)
     @Transactional
     public void deletePost(Long id, String email) {
-        Post post = findPostById(id);
-        Member member = findMemberByEmail(email);
+        Post post = findPost(id);
+        validateOwner(post, email);
 
-        validateOwner(post, member);
         postRepository.delete(post);
+    }
+
+    private Post findPost(Long id) {
+        return postRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "게시글을 찾을 수 없습니다."
+                ));
     }
 
     // 회원 조회
@@ -89,8 +98,8 @@ public class PostService {
     }
 
     //작성자 권한 확인
-    private void validateOwner(Post post, Member member) {
-        if (post.getMember() == null || !post.getMember().getId().equals(member.getId())) {
+    private void validateOwner(Post post, String email) {
+        if (post.getMember() == null || !post.getMember().getEmail().equals(email)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "본인이 작성한 게시글만 수정하거나 삭제할 수 있습니다."

@@ -15,7 +15,13 @@ public record PostResponse(
         String nickname
 ) {
     public static PostResponse from(Post post) {
-        Member member = post.getMember();
+        Long memberId = null;
+        String nickname = null;
+
+        if (post.getMember() != null) {
+            memberId = post.getMember().getId();
+            nickname = post.getMember().getNickname();
+        }
 
         return new PostResponse(
                 post.getId(),
@@ -23,8 +29,8 @@ public record PostResponse(
                 post.getContent(),
                 post.getCreatedAt(),
                 post.getUpdatedAt(),
-                member != null ? member.getId() : null,
-                member != null ? member.getNickname() : null
+                memberId,
+                nickname
         );
     }
 }

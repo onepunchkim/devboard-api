@@ -7,6 +7,7 @@ const postDetail = document.querySelector("#postDetail");
 const postTitle = document.querySelector("#postTitle");
 const postDate = document.querySelector("#postDate");
 const postContent = document.querySelector("#postContent");
+const postAuthor = document.querySelector("#postAuthor");
 
 const editButton = document.querySelector("#editButton");
 const deleteButton = document.querySelector("#deleteButton");
@@ -31,17 +32,29 @@ async function loadPostDetail() {
             ? `작성일: ${new Date(post.createdAt).toLocaleString("ko-KR")}`
             : "";
 
-        postDetail.hidden = false;
-        detailMessage.textContent = "";
+        postAuthor.textContent = post.nickname
+            ? `작성자: ${post.nickname}`
+            : "작성자 정보 없음";
 
-        // 로그인한 사용자에게 수정·삭제 UI를 표시한다.
-        // 실제 작성자 권한 검사는 반드시 백엔드에서 수행해야 한다.
-        if (isLoggedIn()) {
-            editButton.hidden = false;
-            deleteButton.hidden = false;
+        const currentUser = getCurrentUser();
+
+        const isAuthor =
+            currentUser &&
+            currentUser.memberId != null &&
+            post.memberId != null &&
+            String(currentUser.memberId) === String(post.memberId);
+
+        editButton.hidden = !isAuthor;
+        deleteButton.hidden = !isAuthor;
+
+        if (isAuthor) {
             editButton.href =
                 `/write.html?id=${encodeURIComponent(postId)}`;
         }
+
+        postDetail.hidden = false;
+        detailMessage.textContent = "";
+
     } catch (error) {
         console.error("게시글 상세 조회 실패:", error);
 

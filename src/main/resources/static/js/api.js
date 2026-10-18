@@ -28,8 +28,18 @@ function getToken() {
 
 // 로그인 사용자 정보 가져오기
 function getCurrentUser() {
-    const user = localStorage.getItem(USER_KEY);
-    return user ? JSON.parse(user) : null;
+    const userJson = localStorage.getItem(USER_KEY);
+
+    if (!userJson) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(userJson);
+    } catch (error) {
+        console.error("저장된 회원 정보를 읽지 못했습니다.", error);
+        return null;
+    }
 }
 
 // 로그인 여부 확인
