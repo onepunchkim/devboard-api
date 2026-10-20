@@ -96,7 +96,7 @@ public class SecurityConfig {
                                 "/login.html",
                                 "/signup.html",
                                 "/post-detail.html",
-                                "/write.html",  
+                                "/write.html",
                                 "/css/**",
                                 "/js/**",
                                 "/favicon.ico"
@@ -109,7 +109,10 @@ public class SecurityConfig {
                         .permitAll()
 
                         //게시글 API는 기존 JWT인증 유지
-                        .requestMatchers("/api/posts/**").authenticated()
+                        .requestMatchers(
+                                "/api/posts/**",
+                                "/api/comments")
+                        .authenticated()
 
                         //그 외 API는 기존 보안 정책에 맞게 처리
                         .anyRequest().permitAll())
