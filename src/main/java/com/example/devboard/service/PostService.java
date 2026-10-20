@@ -1,6 +1,6 @@
 package com.example.devboard.service;
 
-import com.example.devboard.dto.PostResponse;
+import com.example.devboard.dto.response.PostResponse;
 import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
 import com.example.devboard.repository.MemberRepository;

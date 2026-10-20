@@ -1,8 +1,8 @@
 package com.example.devboard.controller;
 
-import com.example.devboard.dto.MemberLoginRequest;
-import com.example.devboard.dto.MemberLoginResponse;
-import com.example.devboard.dto.MemberSignupRequest;
+import com.example.devboard.dto.request.MemberLoginRequest;
+import com.example.devboard.dto.response.MemberLoginResponse;
+import com.example.devboard.dto.request.MemberSignupRequest;
 import com.example.devboard.entity.Member;
 import com.example.devboard.service.MemberService;
 import jakarta.validation.Valid;

@@ -1,13 +1,13 @@
 package com.example.devboard.service;
 
-import com.example.devboard.dto.MemberSignupRequest;
+import com.example.devboard.dto.request.MemberSignupRequest;
 import com.example.devboard.entity.Member;
 import com.example.devboard.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.devboard.dto.MemberLoginRequest;
-import com.example.devboard.dto.MemberLoginResponse;
+import com.example.devboard.dto.request.MemberLoginRequest;
+import com.example.devboard.dto.response.MemberLoginResponse;
 import org.springframework.security.authentication.BadCredentialsException;
 
 @Service

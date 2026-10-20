@@ -96,7 +96,7 @@ public class SecurityConfig {
                                 "/login.html",
                                 "/signup.html",
                                 "/post-detail.html",
-                                "/write.html",
+                                "/write.html",  
                                 "/css/**",
                                 "/js/**",
                                 "/favicon.ico"

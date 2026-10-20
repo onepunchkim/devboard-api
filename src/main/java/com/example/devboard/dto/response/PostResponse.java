@@ -1,6 +1,5 @@
-package com.example.devboard.dto;
+package com.example.devboard.dto.response;
 
-import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
 
 import java.time.LocalDateTime;

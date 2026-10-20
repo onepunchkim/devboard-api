@@ -1,6 +1,6 @@
 package com.example.devboard.controller;
 
-import com.example.devboard.dto.PostResponse;
+import com.example.devboard.dto.response.PostResponse;
 import com.example.devboard.service.PostService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
