@@ -16,8 +16,11 @@
 
 <main class="container">
     <section class="board">
-        <p id="detailMessage" role="status">게시글을 불러오는 중입니다.</p>
+        <p id="detailMessage" role="status">
+            게시글을 불러오는 중입니다.
+        </p>
 
+        <!-- 게시글 상세 -->
         <article id="postDetail" hidden>
             <h1 id="postTitle"></h1>
             <p id="postDate" class="post-date"></p>
@@ -29,14 +32,55 @@
 
             <div class="post-actions">
                 <a class="button" href="/">목록으로</a>
-                <a id="editButton" class="button" href="/write.html" hidden>
+
+                <a id="editButton"
+                   class="button"
+                   href="/write.html"
+                   hidden>
                     수정
                 </a>
-                <button id="deleteButton" class="button danger" hidden>
+
+                <button id="deleteButton"
+                        class="button danger"
+                        hidden>
                     삭제
                 </button>
             </div>
         </article>
+
+        <!-- 댓글 영역 -->
+        <section id="commentSection" class="comment-section" hidden>
+            <hr>
+
+            <h2>댓글 <span id="commentCount">0</span></h2>
+
+            <!-- 댓글 작성 -->
+            <form id="commentForm">
+                <label for="commentContent">댓글 작성</label>
+
+                <textarea
+                        id="commentContent"
+                        name="content"
+                        maxlength="1000"
+                        placeholder="댓글을 입력해 주세요."
+                        required></textarea>
+
+                <div class="comment-form-actions">
+                    <span id="commentMessage"
+                          role="status"
+                          aria-live="polite"></span>
+
+                    <button type="submit" class="button">
+                        댓글 등록
+                    </button>
+                </div>
+            </form>
+
+            <!-- 댓글 목록 -->
+            <div id="commentList" class="comment-list">
+                <p>댓글을 불러오는 중입니다.</p>
+            </div>
+        </section>
     </section>
 </main>
 
