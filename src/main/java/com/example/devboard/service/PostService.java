@@ -3,6 +3,7 @@ package com.example.devboard.service;
 import com.example.devboard.dto.response.PostResponse;
 import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
+import com.example.devboard.repository.CommentRepository;
 import com.example.devboard.repository.MemberRepository;
 import com.example.devboard.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,10 +22,12 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final CommentRepository commentRepository;
 
-    public PostService(PostRepository postRepository, MemberRepository memberRepository) {
+    public PostService(PostRepository postRepository, MemberRepository memberRepository, CommentRepository commentRepository) {
         this.postRepository = postRepository;
         this.memberRepository = memberRepository;
+        this.commentRepository = commentRepository;
     }
 
     //게시글 작성
@@ -83,10 +86,12 @@ public class PostService {
     //게시글 삭제(작성자만 가능)
     @Transactional
     public void deletePost(Long id, String email) {
-        Post post = findPost(id);
-        validateOwner(post, email);
+        Post post = findPost(id); //게시글 조회
+        validateOwner(post, email); //게시글 작성자 확인
 
-        postRepository.delete(post);
+        commentRepository.deleteByPostId(id); //해당 게시글에 댓글을 먼저 삭제
+
+        postRepository.delete(post); //댓글 삭제 후 게시즐 삭제
     }
 
     private Post findPost(Long id) {
@@ -95,6 +100,7 @@ public class PostService {
                         HttpStatus.NOT_FOUND,
                         "게시글을 찾을 수 없습니다."
                 ));
+
     }
 
     // 회원 조회

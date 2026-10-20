@@ -13,4 +13,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     //특정 회원이 작성한 댓글 조회
     List<Comment> findByMemberId(Long memberId);
+
+    //댓글을 먼저 삭제
+    void deleteByPostId(Long postId);
 }
