@@ -1,5 +1,6 @@
 package com.example.devboard.config;
 
+import com.example.devboard.repository.MemberRepository;
 import com.example.devboard.service.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,9 +57,10 @@ public class SecurityConfig {
     //Jwt 인증 필터 등록
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(
-            JwtService jwtService
+            JwtService jwtService,
+            MemberRepository memberRepository
     ) {
-        return new JwtAuthenticationFilter(jwtService);
+        return new JwtAuthenticationFilter(jwtService, memberRepository);
     }
 
     @Bean
@@ -111,7 +113,8 @@ public class SecurityConfig {
                         //게시글 API는 기존 JWT인증 유지
                         .requestMatchers(
                                 "/api/posts/**",
-                                "/api/comments")
+                                "/api/comments/**",
+                                "/api/members/me")
                         .authenticated()
 
                         //그 외 API는 기존 보안 정책에 맞게 처리

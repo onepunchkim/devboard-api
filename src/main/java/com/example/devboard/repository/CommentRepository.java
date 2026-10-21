@@ -16,4 +16,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     //댓글을 먼저 삭제
     void deleteByPostId(Long postId);
+
+    void deleteByMemberId(Long memberId);
+
 }

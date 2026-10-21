@@ -1,12 +1,14 @@
 package com.example.devboard.controller;
 
 import com.example.devboard.dto.request.MemberLoginRequest;
+import com.example.devboard.dto.request.MemberWithdrawalRequest;
 import com.example.devboard.dto.response.MemberLoginResponse;
 import com.example.devboard.dto.request.MemberSignupRequest;
 import com.example.devboard.entity.Member;
 import com.example.devboard.service.MemberService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -52,5 +54,14 @@ public class MemberController {
             @Valid @RequestBody MemberLoginRequest request
     ) {
         return memberService.login(request);
+    }
+
+    @DeleteMapping("/me")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void withdraw(
+            @Valid @RequestBody MemberWithdrawalRequest request,
+            Authentication authentication
+    ) {
+        memberService.withdraw(authentication.getName(), request);
     }
 }
