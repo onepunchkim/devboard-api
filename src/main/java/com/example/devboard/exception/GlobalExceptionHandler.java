@@ -94,4 +94,21 @@ public class GlobalExceptionHandler {
                 "비밀번호가 올바르지 않습니다."
         );
     }
+
+
+    // 이미 처리된 요청 상태와 충돌하는 경우 처리
+    // 예: 같은 회원이 같은 게시글에 좋아요를 중복 등록한 경우
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(
+            IllegalStateException exception
+    ) {
+        // 중복 요청은 409 Conflict 상태 코드로 반환
+        return createErrorResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage() != null
+                        ? exception.getMessage()
+                        : "현재 상태에서는 요청을 처리할 수 없습니다."
+        );
+    }
+
 }
