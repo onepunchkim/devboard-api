@@ -30,6 +30,22 @@
 
             <div id="postContent" class="post-content"></div>
 
+            <!-- 좋아요 영역: 게시글 내용 바로 아래에 표시 -->
+            <div class="like-section">
+                <!-- 로그인한 회원이 좋아요를 등록하거나 취소하는 버튼 -->
+                <button id="likeButton" type="button" class="like-button">
+                    <span id="likeIcon" aria-hidden="true">♡</span>
+                    <span id="likeText">좋아요</span>
+                </button>
+
+                <!-- 서버에서 조회한 좋아요 개수 -->
+                <span id="likeCount" aria-live="polite">0</span>
+                <span>명이 좋아합니다.</span>
+
+                <!-- 좋아요 요청 결과 및 오류 메시지 -->
+                <span id="likeMessage" role="status" aria-live="polite"></span>
+            </div>
+
             <div class="post-actions">
                 <a class="button" href="/">목록으로</a>
 

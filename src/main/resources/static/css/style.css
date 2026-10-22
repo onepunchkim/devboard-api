@@ -332,3 +332,48 @@ css
     cursor: not-allowed;
     opacity: 0.6;
 }
+
+/* 좋아요 영역의 정렬 및 여백 */
+.like-section {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+/* 좋아요 버튼 기본 스타일 */
+.like-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* 마우스를 올렸을 때 */
+.like-button:hover {
+    background: #f5f5f5;
+}
+
+/* 좋아요를 누른 상태 */
+.like-button.liked {
+    color: #e53935;
+    border-color: #e53935;
+}
+
+/* 하트 아이콘 */
+#likeIcon {
+    font-size: 18px;
+}
+
+/* 좋아요 처리 결과 메시지 */
+#likeMessage {
+    font-size: 13px;
+    color: #666;
+}
