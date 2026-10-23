@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevBoard - 실시간 채팅</title>
+
+    <link rel="stylesheet" href="/css/chat.css">
+</head>
+<body>
+<header class="top-bar">
+    <a href="/index.html" class="logo">DevBoard</a>
+
+    <div class="header-actions">
+        <span id="current-user">로그인 확인 중...</span>
+        <button id="logout-button" class="secondary-button" type="button">
+            로그아웃
+        </button>
+    </div>
+</header>
+
+<main class="chat-layout">
+    <aside class="sidebar">
+        <h1>채팅</h1>
+
+        <form id="create-room-form" class="create-room-form">
+            <label for="target-member-id">상대방 회원 ID</label>
+
+            <div class="create-room-input">
+                <input
+                        id="target-member-id"
+                        type="number"
+                        min="1"
+                        placeholder="회원 ID 입력"
+                        required
+                >
+                <button type="submit">대화 시작</button>
+            </div>
+
+            <p class="help-text">
+                상대방의 회원 ID를 입력하면 1:1 채팅방을 만들거나 기존 방을 열어요.
+            </p>
+        </form>
+
+        <div class="room-heading">
+            <h2>채팅방 목록</h2>
+            <button id="refresh-rooms-button"
+                    class="icon-button"
+                    type="button"
+                    aria-label="채팅방 목록 새로고침">
+                ↻
+            </button>
+        </div>
+
+        <p id="room-list-status" class="status-text"></p>
+        <ul id="room-list" class="room-list"></ul>
+    </aside>
+
+    <section class="chat-panel">
+        <div class="chat-header">
+            <div>
+                <h2 id="partner-name">채팅방을 선택하세요</h2>
+                <p id="connection-status" class="connection-status">
+                    연결되지 않음
+                </p>
+            </div>
+            <span id="room-id-label" class="room-id-label"></span>
+        </div>
+
+        <div id="message-list" class="message-list">
+            <div class="empty-state">
+                왼쪽에서 채팅방을 선택하거나 새 대화를 시작하세요.
+            </div>
+        </div>
+
+        <p id="chat-status" class="chat-status" role="status"></p>
+
+        <form id="message-form" class="message-form">
+            <textarea
+                    id="message-input"
+                    rows="2"
+                    maxlength="2000"
+                    placeholder="메시지를 입력하세요. (Enter 전송, Shift+Enter 줄바꿈)"
+                    disabled
+                    required
+            ></textarea>
+
+            <button id="send-button" type="submit" disabled>
+                전송
+            </button>
+        </form>
+    </section>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.1.1/bundles/stomp.umd.min.js"></script>
+<script src="/js/chat.js"></script>
+</body>
+</html>

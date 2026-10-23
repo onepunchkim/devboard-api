@@ -6,6 +6,7 @@
     <title>DevBoard | 게시판</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/online-presence.css">
 </head>
 <body>
 <header class="header">
@@ -47,9 +48,27 @@
             </button>
         </div>
     </section>
+
+
+    <!-- 온라인 회원 목록 -->
+    <section class="online-members-panel">
+        <div class="online-members-heading">
+            <h2>접속 중인 회원</h2>
+            <span class="online-indicator"></span>
+        </div>
+
+        <p id="online-status" class="online-status">
+            온라인 회원을 확인하는 중...
+        </p>
+
+        <ul id="online-members" class="online-members-list"></ul>
+    </section>
+
 </main>
 
 <script src="/js/api.js"></script>
 <script src="/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.1.1/bundles/stomp.umd.min.js"></script>
+<script src="/js/online-presence.js"></script>
 </body>
 </html>

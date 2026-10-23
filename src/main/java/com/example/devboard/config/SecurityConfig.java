@@ -115,7 +115,8 @@ public class SecurityConfig {
                                 "/api/posts/**",
                                 "/api/chat/**",
                                 "/api/comments/**",
-                                "/api/members/me")
+                                "/api/members/me",
+                                "/api/members/online")
                         .authenticated()
 
                         //그 외 API는 기존 보안 정책에 맞게 처리

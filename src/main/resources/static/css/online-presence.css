@@ -1,0 +1,73 @@
+
+.online-members-panel {
+    margin: 20px 0;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #e3e7ef;
+    border-radius: 14px;
+}
+
+.online-members-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.online-members-heading h2 {
+    margin: 0;
+    color: #252b3a;
+    font-size: 18px;
+}
+
+.online-indicator,
+.online-dot {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 9px;
+    height: 9px;
+    background: #20b875;
+    border-radius: 50%;
+}
+
+.online-status {
+    margin: 12px 0;
+    color: #778092;
+    font-size: 13px;
+}
+
+.online-members-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.online-member-button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 14px;
+    color: #30384a;
+    background: #f7f8fc;
+    border: 1px solid #e4e8f1;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.online-member-button:hover {
+    background: #eef2ff;
+    border-color: #aebcff;
+}
+
+.online-member-name {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.online-member-button:focus-visible {
+    outline: 2px solid #4059d9;
+    outline-offset: 2px;
+}
