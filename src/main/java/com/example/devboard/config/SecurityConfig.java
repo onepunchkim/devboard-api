@@ -113,6 +113,7 @@ public class SecurityConfig {
                         //게시글 API는 기존 JWT인증 유지
                         .requestMatchers(
                                 "/api/posts/**",
+                                "/api/chat/**",
                                 "/api/comments/**",
                                 "/api/members/me")
                         .authenticated()
