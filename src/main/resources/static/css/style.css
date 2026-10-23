@@ -377,3 +377,57 @@ css
     font-size: 13px;
     color: #666;
 }
+
+
+/* 게시판 컨테이너 너비 확장 */
+.container {
+    max-width: 1400px;
+    width: 100%;
+    margin: 40px auto;
+    padding: 0 24px;
+}
+
+/* 회원 목록 왼쪽 + 게시판 오른쪽 */
+.board-layout {
+    display: grid !important;
+    grid-template-columns: 250px minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
+    width: 100%;
+}
+
+/* 왼쪽 회원 목록 */
+.board-sidebar {
+    min-width: 0;
+    position: sticky;
+    top: 24px;
+}
+
+.board-sidebar .online-members-panel {
+    width: 100%;
+    margin: 0;
+}
+
+/* 오른쪽 게시판 */
+.board-layout > .board {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 24px;
+}
+
+/* 모바일 화면 */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .board-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .board-sidebar {
+        position: static;
+    }
+}

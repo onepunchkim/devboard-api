@@ -24,46 +24,53 @@
         <p>개발 지식과 경험을 공유하는 공간입니다.</p>
     </section>
 
-    <section class="board">
-        <div class="board-heading">
-            <h2>게시글 목록</h2>
-            <a id="writeButton" class="button" href="/write.html"
-               hidden>글쓰기</a>
-        </div>
+    <!-- 회원 목록 + 게시판을 나란히 배치 -->
+    <div class="board-layout">
 
-        <p id="boardMessage" role="status">게시글을 불러오는 중입니다.</p>
+        <!-- 왼쪽: 온라인 회원 목록 -->
+        <aside class="board-sidebar">
+            <section class="online-members-panel">
+                <div class="online-members-heading">
+                    <h2>접속 중인 회원</h2>
+                    <span class="online-indicator"></span>
+                </div>
 
-        <div id="postList" class="post-list"></div>
+                <p id="online-status" class="online-status">
+                    온라인 회원을 확인하는 중...
+                </p>
 
-        <!-- 페이지네이션 -->
-        <div id="pagination" class="pagination">
-            <button id="prevButton" type="button" disabled>
-                이전
-            </button>
+                <ul id="online-members" class="online-members-list"></ul>
+            </section>
+        </aside>
 
-            <span id="pageInfo">1 / 1</span>
+        <!-- 오른쪽: 기존 게시판 -->
+        <section class="board">
+            <div class="board-heading">
+                <h2>게시글 목록</h2>
+                <a id="writeButton" class="button"
+                   href="/write.html" hidden>글쓰기</a>
+            </div>
 
-            <button id="nextButton" type="button" disabled>
-                다음
-            </button>
-        </div>
-    </section>
+            <p id="boardMessage" role="status">
+                게시글을 불러오는 중입니다.
+            </p>
 
+            <div id="postList" class="post-list"></div>
 
-    <!-- 온라인 회원 목록 -->
-    <section class="online-members-panel">
-        <div class="online-members-heading">
-            <h2>접속 중인 회원</h2>
-            <span class="online-indicator"></span>
-        </div>
+            <div id="pagination" class="pagination">
+                <button id="prevButton" type="button" disabled>
+                    이전
+                </button>
 
-        <p id="online-status" class="online-status">
-            온라인 회원을 확인하는 중...
-        </p>
+                <span id="pageInfo">1 / 1</span>
 
-        <ul id="online-members" class="online-members-list"></ul>
-    </section>
+                <button id="nextButton" type="button" disabled>
+                    다음
+                </button>
+            </div>
+        </section>
 
+    </div>
 </main>
 
 <script src="/js/api.js"></script>
