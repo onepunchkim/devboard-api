@@ -188,3 +188,112 @@ form .post-actions {
     color: var(--danger);
     overflow-wrap: anywhere;
 }
+
+
+
+/* ========================================
+   로그인 및 회원가입 페이지 레이아웃
+   ======================================== */
+
+/* 인증 페이지 배경 */
+.auth-page {
+    min-height: 100vh;
+    margin: 0;
+    background: #f4f7fd;
+}
+
+/* 인증 페이지 헤더를 상단에 배치 */
+.auth-page .header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+    min-height: 76px;
+    padding: 16px 32px;
+    box-sizing: border-box;
+
+    background: #ffffff;
+    border-bottom: 1px solid #e7ecf5;
+}
+
+/* 헤더의 로고와 메뉴 */
+.auth-page .header .logo {
+    text-decoration: none;
+}
+
+.auth-page .header nav {
+    margin-left: auto;
+}
+
+/* 로그인 및 회원가입 폼을 중앙에 배치 */
+.auth-main {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-sizing: border-box;
+    padding: 100px 20px 32px;
+}
+
+/* 로그인 및 회원가입 카드 */
+.auth-container {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 36px;
+
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1px solid #e7ecf5;
+    border-radius: 16px;
+    box-shadow: 0 5px 24px rgba(37, 70, 130, 0.08);
+}
+
+/* 제목 */
+.auth-container h1,
+.auth-container h2 {
+    text-align: center;
+}
+
+/* 설명 */
+.auth-container .auth-description {
+    margin-bottom: 24px;
+    text-align: center;
+    color: #75839f;
+}
+
+/* 인증 폼 너비를 카드에 맞춤 */
+.auth-container form {
+    width: 100%;
+    max-width: none;
+}
+
+/* 인증 폼 버튼 너비 */
+.auth-container form button {
+    width: 100%;
+}
+
+/* 모바일 화면 대응 */
+@media (max-width: 480px) {
+    .auth-page .header {
+        min-height: 64px;
+        padding: 12px 16px;
+    }
+
+    .auth-main {
+        padding: 88px 16px 24px;
+    }
+
+    .auth-container {
+        padding: 26px 22px;
+    }
+}
+

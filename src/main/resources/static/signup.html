@@ -5,46 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입 | DevBoard</title>
 
-    <!-- 분리한 CSS가 정상 작동하는지 확인하기 위해 임시 비활성화 -->
-    <!-- <link rel="stylesheet" href="/css/style.css"> -->
-
-    <!-- 분리한 공통 및 레이아웃 스타일 -->
+    <!-- 공통 및 레이아웃 스타일 -->
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/layout.css">
 
-    <!-- 분리한 기능별 스타일 -->
+    <!-- 기능별 스타일 -->
     <link rel="stylesheet" href="/css/header.css">
     <link rel="stylesheet" href="/css/online-members.css">
     <link rel="stylesheet" href="/css/board.css">
     <link rel="stylesheet" href="/css/post-detail.css">
 
-    <!-- 반응형 스타일은 마지막에 적용 -->
+    <!-- 반응형 스타일 -->
     <link rel="stylesheet" href="/css/responsive.css">
-
 </head>
-<body>
+<body class="auth-page">
+
 <header class="header">
     <a class="logo" href="/">DevBoard</a>
-    <nav><a href="/login.html">로그인</a></nav>
+    <nav>
+        <a href="/login.html">로그인</a>
+    </nav>
 </header>
 
-<main class="container">
-    <section class="board">
+<!-- 회원가입 영역을 화면 중앙에 배치 -->
+<main class="auth-main">
+    <section class="auth-container">
         <h1>회원가입</h1>
-        <p>DevBoard의 새로운 회원이 되어 보세요.</p>
+        <p class="auth-description">
+            DevBoard의 새로운 회원이 되어 보세요.
+        </p>
 
         <form id="signupForm">
             <label for="email">이메일</label>
-            <input id="email" type="email" required maxlength="100"
-                   placeholder="이메일을 입력하세요">
+            <input
+                    id="email"
+                    type="email"
+                    required
+                    maxlength="100"
+                    placeholder="이메일을 입력하세요"
+            >
 
             <label for="nickname">닉네임</label>
-            <input id="nickname" type="text" required maxlength="30"
-                   placeholder="닉네임을 입력하세요">
+            <input
+                    id="nickname"
+                    type="text"
+                    required
+                    maxlength="30"
+                    placeholder="닉네임을 입력하세요"
+            >
 
             <label for="password">비밀번호</label>
-            <input id="password" type="password" required minlength="8"
-                   placeholder="비밀번호를 입력하세요">
+            <input
+                    id="password"
+                    type="password"
+                    required
+                    minlength="8"
+                    placeholder="비밀번호를 입력하세요"
+            >
 
             <button class="button" type="submit">가입하기</button>
             <p id="message" role="status"></p>
