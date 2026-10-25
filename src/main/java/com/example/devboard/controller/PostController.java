@@ -35,14 +35,23 @@ public class PostController {
         );
     }
 
-    //전체 게시글 조회 - 페이징
+    // 전체 게시글 조회 - 검색, 페이징, 정렬
     @GetMapping
     public Page<PostResponse> findAll(
+            // 제목 또는 내용 검색어
             @RequestParam(required = false) String keyword,
+
+            // 페이지 번호: 기본값 0
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+
+            // 페이지 크기: 기본값 10
+            @RequestParam(defaultValue = "10") int size,
+
+            // 정렬 기준: latest(최신순), oldest(오래된순)
+            @RequestParam(defaultValue = "latest") String sort
     ) {
-        return postService.findAll(keyword, page, size);
+        // 검색어, 페이지, 페이지 크기, 정렬 기준을 서비스로 전달
+        return postService.findAll(keyword, page, size, sort);
     }
 
     //특정 게시글 조회

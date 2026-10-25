@@ -13,6 +13,14 @@ const pageInfo = document.querySelector("#pageInfo");
 const headerSearch = document.querySelector("#headerSearch");
 const postSearch = document.querySelector("#postSearch");
 
+// 정렬 및 게시글 개수 표시 요소
+const postSort = document.querySelector("#postSort");
+const postCount = document.querySelector("#postCount");
+const searchResultCount = document.querySelector("#searchResultCount");
+
+// 현재 정렬 조건: 기본값은 최신순
+let currentSort = "latest";
+
 // 페이지네이션 상태
 let currentPage = 0;
 const pageSize = 10;
@@ -81,6 +89,14 @@ function syncSearchInputs(keyword) {
 async function loadPosts() {
     // 비로그인 상태에서는 로그인 안내 표시
     if (!isLoggedIn()) {
+        // 비로그인 상태에서는 게시글 개수와 페이지 정보 초기화
+        if (postCount) {
+            postCount.textContent = "로그인 후 게시글을 확인할 수 있습니다.";
+        }
+
+        if (searchResultCount) {
+            searchResultCount.textContent = "";
+        }
         boardMessage.textContent =
             "게시글을 확인하려면 먼저 로그인해 주세요.";
 
@@ -102,12 +118,14 @@ async function loadPosts() {
     postList.replaceChildren();
 
     try {
-        // 검색어가 있으면 URL에 포함
+        // 페이지, 페이지 크기, 정렬 조건 설정
         const params = new URLSearchParams({
-            page: currentPage,
-            size: pageSize
+            page: String(currentPage),
+            size: String(pageSize),
+            sort: currentSort
         });
 
+        // 검색어가 있으면 검색 조건 추가
         if (currentKeyword) {
             params.set("keyword", currentKeyword);
         }
@@ -136,6 +154,21 @@ async function loadPosts() {
         totalPages = Array.isArray(data)
             ? (posts.length > 0 ? 1 : 0)
             : (data.totalPages ?? 0);
+
+        // 전체 게시글 수 또는 검색 결과 수 표시
+        const totalElements = Array.isArray(data)
+            ? posts.length
+            : (data.totalElements ?? 0);
+
+        if (postCount) {
+            postCount.textContent = `전체 게시글 ${totalElements}개`;
+        }
+
+        if (searchResultCount) {
+            searchResultCount.textContent = currentKeyword
+                ? `검색 결과 ${totalElements}개`
+                : "";
+        }
 
         // 현재 페이지가 범위를 벗어나면 첫 페이지로 복귀
         if (
@@ -283,6 +316,23 @@ if (postSearch) {
         if (postSearch.value === "") {
             searchPosts("");
         }
+    });
+}
+
+// 정렬 메뉴 변경 이벤트
+if (postSort) {
+    // 현재 정렬 상태를 선택 메뉴에 반영
+    postSort.value = currentSort;
+
+    postSort.addEventListener("change", () => {
+        // 선택한 정렬 조건 저장
+        currentSort = postSort.value;
+
+        // 정렬 변경 시 첫 페이지부터 조회
+        currentPage = 0;
+
+        // 변경된 정렬 조건으로 게시글 재조회
+        loadPosts();
     });
 }
 

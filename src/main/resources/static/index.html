@@ -111,7 +111,7 @@
                 </a>
             </div>
 
-            <!-- 게시판 내부 검색창 -->
+            <!-- 게시판 검색 및 정렬 도구 -->
             <div class="board-toolbar">
                 <label class="board-search">
                     <span aria-hidden="true">⌕</span>
@@ -122,6 +122,21 @@
                             aria-label="게시글 검색"
                     >
                 </label>
+
+                <!-- 게시글 정렬 메뉴 -->
+                <label class="board-sort">
+                    <span class="sr-only">게시글 정렬</span>
+                    <select id="postSort" aria-label="게시글 정렬">
+                        <option value="latest">최신순</option>
+                        <option value="oldest">오래된순</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- 게시글 수 및 검색 결과 안내 -->
+            <div class="board-result-bar">
+                <p id="postCount" class="post-count">게시글을 불러오는 중...</p>
+                <p id="searchResultCount" class="search-result-count" aria-live="polite"></p>
             </div>
 
             <!-- 게시글 목록 상태 -->

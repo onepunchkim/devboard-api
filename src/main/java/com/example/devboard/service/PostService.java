@@ -41,10 +41,21 @@ public class PostService {
         return PostResponse.from(postRepository.save(post));
     }
 
-    // 게시글 목록 조회 및 검색 - 페이징
+    // 게시글 목록 조회 및 검색 - 기본 정렬은 최신순
     @Transactional(readOnly = true)
     public Page<PostResponse> findAll(String keyword, int page, int size) {
+        // 기존 호출 방식은 최신순으로 처리
+        return findAll(keyword, page, size, "latest");
+    }
 
+    // 게시글 목록 조회 및 검색 - 정렬 조건 지원
+    @Transactional(readOnly = true)
+    public Page<PostResponse> findAll(
+            String keyword,
+            int page,
+            int size,
+            String sort
+    ) {
         // 페이지 번호와 페이지 크기 검증
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(
@@ -53,11 +64,31 @@ public class PostService {
             );
         }
 
-        // 최신 게시글이 먼저 나오도록 정렬
+        // 정렬 조건에 따라 생성일 오름차순 또는 내림차순 설정
+        Sort.Direction direction;
+
+        if ("oldest".equalsIgnoreCase(sort)) {
+            direction = Sort.Direction.ASC;  // 오래된 게시글 먼저
+        } else if (sort == null || sort.isBlank()
+                || "latest".equalsIgnoreCase(sort)) {
+            direction = Sort.Direction.DESC; // 최신 게시글 먼저
+        } else {
+            // 지원하지 않는 정렬 조건은 잘못된 요청으로 처리
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "지원하지 않는 정렬 조건입니다."
+            );
+        }
+
+        // 게시글 생성일과 ID를 기준으로 정렬
+        // 생성 시간이 같을 때도 순서가 일정하도록 ID를 보조 기준으로 사용
         Pageable pageable = PageRequest.of(
                 page,
                 size,
-                Sort.by(Sort.Direction.DESC, "createdAt")
+                Sort.by(
+                        new Sort.Order(direction, "createdAt"),
+                        new Sort.Order(direction, "id")
+                )
         );
 
         Page<Post> posts;
@@ -66,7 +97,7 @@ public class PostService {
             // 검색어가 없으면 전체 게시글 조회
             posts = postRepository.findAll(pageable);
         } else {
-            // 제목 또는 내용에 검색어가 포함된 게시글 검색
+            // 제목 또는 내용에 검색어가 포함된 게시글 조회
             String searchKeyword = keyword.trim();
 
             posts = postRepository.findByTitleContainingOrContentContaining(

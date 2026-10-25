@@ -1545,3 +1545,109 @@ form .post-actions {
         gap: 6px;
     }
 }
+
+/* 접근성: 화면에는 숨기지만 스크린 리더에는 읽히도록 처리 */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* 검색창과 정렬 메뉴 */
+.board-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.board-search {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 10px;
+    height: 44px;
+    padding: 0 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.board-search:focus-within {
+    border-color: #a9c1ff;
+    box-shadow: 0 0 0 3px rgba(49, 104, 245, 0.08);
+}
+
+.board-search > span {
+    color: var(--text-secondary);
+    font-size: 22px;
+}
+
+.board-search input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+}
+
+.board-sort select {
+    min-height: 44px;
+    padding: 0 30px 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+}
+
+/* 게시글 수 및 검색 결과 표시 */
+.board-result-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 14px;
+}
+
+.post-count,
+.search-result-count {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.post-count {
+    font-weight: 700;
+}
+
+.search-result-count {
+    color: var(--primary);
+}
+
+/* 작은 화면에서는 검색창과 정렬 메뉴를 세로 배치 */
+@media (max-width: 520px) {
+    .board-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .board-sort select {
+        width: 100%;
+    }
+
+    .board-result-bar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
