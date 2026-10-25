@@ -1,0 +1,133 @@
+/* ========================================
+   DevBoard 공통 레이아웃
+   메인 컨테이너, 환영 배너, 푸터
+   ======================================== */
+
+/* 페이지 메인 컨테이너 */
+.container {
+    width: 100%;
+    max-width: 1600px;
+
+    margin: 0 auto;
+    padding: 24px 28px 0;
+}
+
+/* 메인 환영 배너 */
+.welcome-banner {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 185px;
+    margin-bottom: 24px;
+    padding: 30px 36px;
+
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: var(--radius-lg);
+
+    background: linear-gradient(
+            115deg,
+            #fff0e9 0%,
+            #e6edff 50%,
+            #c8dcff 100%
+    );
+
+    box-shadow: var(--shadow);
+}
+
+/* 배너 텍스트 영역 */
+.welcome-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* 배너 위쪽 작은 안내 문구 */
+.welcome-eyebrow {
+    display: block;
+    margin-bottom: 8px;
+
+    color: #5278c7;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+/* 배너 메인 제목 */
+.welcome-content h1 {
+    margin: 0 0 8px;
+
+    color: #183875;
+    font-size: clamp(25px, 3vw, 34px);
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+/* 배너 부제목 */
+.welcome-content h2 {
+    margin: 0 0 8px;
+
+    color: #264b91;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* 배너 설명 */
+.welcome-content p {
+    margin: 0;
+
+    color: #657a9f;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+/* 장식용 코드 아이콘 */
+.welcome-decoration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 115px;
+    height: 115px;
+    margin-right: 24px;
+
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 30px;
+
+    background: rgba(255, 255, 255, 0.3);
+
+    color: rgba(45, 91, 176, 0.65);
+    font-family: Consolas, monospace;
+    font-size: 40px;
+    font-weight: 800;
+
+    transform: rotate(-8deg);
+}
+
+/* 페이지 하단 푸터 */
+.site-footer {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    padding: 24px 0 28px;
+
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* 푸터 로고 */
+.footer-logo {
+    color: #2455c6;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+/* 푸터 문단 */
+.site-footer p {
+    margin: 0;
+}

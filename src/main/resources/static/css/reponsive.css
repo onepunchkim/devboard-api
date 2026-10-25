@@ -1,0 +1,348 @@
+/* ========================================
+   DevBoard 반응형 스타일
+   원본 style.css의 미디어 쿼리 추출
+   ======================================== */
+
+/* 작은 노트북: 화면 너비 1100px 이하 */
+@media (max-width: 1100px) {
+    .header {
+        gap: 20px;
+        padding-right: 22px;
+        padding-left: 22px;
+    }
+
+    .container {
+        padding-right: 20px;
+        padding-left: 20px;
+    }
+
+    .board-layout {
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .board-layout > .board {
+        padding: 22px;
+    }
+
+    .welcome-banner {
+        min-height: 165px;
+    }
+
+    .welcome-decoration {
+        width: 90px;
+        height: 90px;
+        margin-right: 10px;
+    }
+}
+
+/* 태블릿: 화면 너비 800px 이하 */
+@media (max-width: 800px) {
+    /* 헤더 메뉴를 여러 줄로 배치 */
+    .header {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px 18px;
+    }
+
+    .logo {
+        font-size: 22px;
+    }
+
+    .logo-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+    }
+
+    /* 검색창을 헤더 아래쪽에 배치 */
+    .header-search {
+        order: 3;
+        flex-basis: 100%;
+        max-width: none;
+        margin: 0;
+    }
+
+    .header-nav {
+        margin-left: auto;
+    }
+
+    /* 페이지 여백 축소 */
+    .container {
+        padding: 20px 16px 0;
+    }
+
+    /* 사이드바와 게시판을 세로로 배치 */
+    .board-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .board-sidebar {
+        position: static;
+    }
+
+    .board-sidebar .online-members-panel {
+        border-radius: 14px;
+    }
+
+    .online-members-list {
+        max-height: 240px;
+    }
+
+    /* 환영 배너 크기 조정 */
+    .welcome-banner {
+        min-height: 155px;
+        padding: 24px;
+    }
+
+    .welcome-decoration {
+        width: 70px;
+        height: 70px;
+        margin-right: 0;
+        border-radius: 20px;
+        font-size: 28px;
+    }
+
+    .board-layout > .board {
+        padding: 20px;
+    }
+}
+
+/* 스마트폰: 화면 너비 480px 이하 */
+@media (max-width: 480px) {
+    .header {
+        padding: 10px 14px;
+    }
+
+    .logo {
+        gap: 7px;
+        font-size: 20px;
+    }
+
+    .header-nav {
+        gap: 9px;
+        font-size: 12px;
+    }
+
+    .header-nav .nav-signup {
+        padding: 7px 10px;
+    }
+
+    .container {
+        padding: 14px 12px 0;
+    }
+
+    /* 환영 배너 */
+    .welcome-banner {
+        min-height: 0;
+        padding: 22px 18px;
+        margin-bottom: 16px;
+    }
+
+    .welcome-content h1 {
+        font-size: 25px;
+    }
+
+    .welcome-content h2 {
+        font-size: 15px;
+    }
+
+    .welcome-content p {
+        font-size: 12px;
+    }
+
+    .welcome-decoration {
+        display: none;
+    }
+
+    /* 게시판 */
+    .board-layout {
+        gap: 14px;
+    }
+
+    .board-layout > .board {
+        padding: 16px 12px;
+        border-radius: 14px;
+    }
+
+    .board-heading {
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+    }
+
+    .board-heading h2 {
+        font-size: 21px;
+    }
+
+    .board-heading p {
+        font-size: 12px;
+    }
+
+    .write-button {
+        padding: 9px 11px;
+        font-size: 12px;
+    }
+
+    /* 게시글 카드 */
+    .post-card {
+        padding: 16px 8px;
+    }
+
+    .post-card h3 {
+        font-size: 14px;
+    }
+
+    .post-card p {
+        font-size: 12px;
+    }
+
+    /* 페이지 이동 */
+    .pagination {
+        gap: 6px;
+    }
+
+    .pagination button {
+        min-width: 32px;
+        padding: 6px 9px;
+    }
+
+    /* 하단 영역 */
+    .site-footer {
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+}
+
+/* 게시글 카드: 화면 너비 600px 이하 */
+@media (max-width: 600px) {
+    .post-card {
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .post-card-title {
+        font-size: 16px;
+    }
+
+    .post-card-content {
+        font-size: 13px;
+    }
+
+    .post-card-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+}
+
+/* 검색창과 정렬 메뉴: 화면 너비 520px 이하 */
+@media (max-width: 520px) {
+    .board-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .board-sort select {
+        width: 100%;
+    }
+
+    .board-result-bar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+
+/* ========================================
+   채팅 화면 모바일 반응형
+   ======================================== */
+
+@media (max-width: 760px) {
+    /* 상단 헤더 */
+    .top-bar {
+        padding: 0 16px;
+    }
+
+    .logo {
+        font-size: 21px;
+    }
+
+    .header-actions {
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    /* 채팅방 목록과 메시지 영역을 세로로 배치 */
+    .chat-layout {
+        width: 100%;
+        height: auto;
+        min-height: calc(100vh - 68px);
+
+        margin: 0;
+
+        grid-template-columns: minmax(0, 1fr);
+
+        border: 0;
+        border-radius: 0;
+
+        background: #111827;
+    }
+
+    /* 채팅방 목록 */
+    .sidebar {
+        max-height: 320px;
+        padding: 20px 16px;
+
+        background: #111827;
+
+        border-right: 0;
+        border-bottom: 1px solid #273449;
+    }
+
+    /* 채팅 메시지 영역 */
+    .chat-panel {
+        min-height: 520px;
+    }
+
+    .chat-header {
+        padding: 16px;
+    }
+
+    /* 메시지 목록 */
+    .message-list {
+        min-height: 260px;
+        padding: 16px;
+    }
+
+    /* 메시지 말풍선 */
+    .message-row {
+        max-width: 90%;
+    }
+
+    /* 메시지 입력 영역 */
+    .message-form {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .message-form textarea {
+        height: 44px;
+        min-height: 44px;
+        max-height: 100px;
+        padding: 11px 12px;
+    }
+
+    .message-form button {
+        min-width: 60px;
+        padding: 0 12px;
+    }
+
+    /* 채팅 상태 메시지 */
+    .chat-status {
+        padding: 0 12px;
+    }
+}
+

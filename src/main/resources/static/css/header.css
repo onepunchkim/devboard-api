@@ -1,0 +1,178 @@
+/* ========================================
+   DevBoard 헤더 스타일
+   기존 style.css의 2. 상단 헤더에서 추출
+   ======================================== */
+
+/* 상단 헤더 */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
+    display: flex;
+    align-items: center;
+    gap: 32px;
+
+    min-height: 72px;
+    padding: 12px 32px;
+
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid var(--border);
+
+    backdrop-filter: blur(14px);
+}
+
+/* DevBoard 로고 */
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    flex-shrink: 0;
+
+    color: #1746ad;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -1px;
+
+    text-decoration: none;
+}
+
+/* 로고 아이콘 */
+.logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 10px;
+
+    background: linear-gradient(
+            135deg,
+            #5590ff,
+            #2455e8
+    );
+
+    color: white;
+    font-size: 23px;
+    font-weight: 800;
+
+    box-shadow: 0 4px 10px rgba(49, 104, 245, 0.2);
+}
+
+/* 상단 검색창 */
+.header-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    width: min(100%, 560px);
+    height: 44px;
+
+    margin: 0 auto;
+    padding: 0 16px;
+
+    border: 1px solid transparent;
+    border-radius: 24px;
+
+    background: #f2f5fb;
+
+    transition:
+            border-color 0.2s,
+            background 0.2s,
+            box-shadow 0.2s;
+}
+
+/* 검색창에 입력할 때 */
+.header-search:focus-within {
+    background: white;
+    border-color: #a9c1ff;
+
+    box-shadow: 0 0 0 3px rgba(49, 104, 245, 0.08);
+}
+
+/* 검색 아이콘 */
+.search-icon {
+    color: #63769a;
+    font-size: 24px;
+    line-height: 1;
+}
+
+/* 검색 입력창 */
+.header-search input {
+    width: 100%;
+    min-width: 0;
+
+    padding: 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: var(--text);
+    font-size: 14px;
+}
+
+/* 검색 입력창 안내 문구 */
+.header-search input::placeholder {
+    color: #98a5bd;
+}
+
+/* 상단 메뉴 */
+nav,
+.header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+
+    flex-shrink: 0;
+}
+
+/* 상단 메뉴 링크 */
+nav a,
+.header-nav a {
+    color: #53627d;
+    font-weight: 600;
+    text-decoration: none;
+
+    transition: color 0.2s;
+}
+
+/* 메뉴에 마우스를 올렸을 때 */
+nav a:hover,
+.header-nav a:hover {
+    color: var(--primary);
+}
+
+/* 회원가입 메뉴 */
+.header-nav .nav-signup {
+    padding: 9px 15px;
+
+    border-radius: var(--radius-sm);
+
+    background: var(--primary);
+    color: white;
+}
+
+/* 회원가입 메뉴 호버 */
+.header-nav .nav-signup:hover {
+    background: var(--primary-hover);
+    color: white;
+}
+
+/* 로그인 후 표시되는 메뉴 버튼 */
+#navMenu button {
+    padding: 9px 14px;
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+
+    background: white;
+    color: var(--text);
+
+    cursor: pointer;
+}

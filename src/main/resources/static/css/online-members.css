@@ -1,0 +1,186 @@
+/* ========================================
+   DevBoard 온라인 회원 스타일
+   온라인 회원 패널, 접속 상태, 채팅 안내
+   원본 style.css 디자인 유지
+   ======================================== */
+
+/* 왼쪽 사이드바 */
+.board-sidebar {
+    min-width: 0;
+
+    /* 게시판 스크롤 시 사이드바 위치 유지 */
+    position: sticky;
+    top: 96px;
+}
+
+/* 온라인 회원 패널: 어두운 남색 배경 */
+.board-sidebar .online-members-panel {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+
+    overflow: hidden;
+
+    border: 1px solid #293958;
+    border-radius: var(--radius-md);
+
+    background: linear-gradient(
+            180deg,
+            #1b2947,
+            #15213a
+    );
+
+    color: #f5f7ff;
+
+    box-shadow: 0 8px 24px rgba(20, 35, 65, 0.12);
+}
+
+/* 패널 제목 영역 */
+.online-members-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 20px 18px 12px;
+}
+
+/* 제목과 온라인 인원 */
+.online-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 온라인 회원 제목 */
+.online-title h2,
+.online-members-heading h2 {
+    margin: 0;
+
+    color: #f5f7ff;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* 온라인 상태 표시 점 */
+.online-indicator {
+    display: inline-block;
+    flex-shrink: 0;
+
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+    background: #20d59a;
+
+    box-shadow: 0 0 10px rgba(32, 213, 154, 0.35);
+}
+
+/* 온라인 상태 안내 문구 */
+.online-status {
+    margin: 0;
+    padding: 0 18px 12px;
+
+    color: #a7b8da;
+    font-size: 12px;
+}
+
+/* 온라인 회원 목록 */
+.online-members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    max-height: 560px;
+    overflow-y: auto;
+
+    margin: 0;
+    padding: 0 10px 14px;
+
+    list-style: none;
+}
+
+/* 회원 목록 스크롤바 */
+.online-members-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.online-members-list::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #425477;
+}
+
+.online-members-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* 회원 목록 항목 */
+.online-members-list li {
+    min-width: 0;
+
+    border-radius: 10px;
+
+    transition:
+            background 0.2s,
+            transform 0.2s;
+}
+
+/* 회원 항목에 마우스를 올렸을 때 */
+.online-members-list li:hover {
+    background: rgba(111, 151, 255, 0.13);
+}
+
+/* 채팅 안내 패널 */
+.chat-promo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin: 0 12px 14px;
+    padding: 14px;
+
+    border: 1px solid rgba(132, 165, 255, 0.15);
+    border-radius: 12px;
+
+    background: linear-gradient(
+            135deg,
+            #263f78,
+            #24345e
+    );
+}
+
+/* 채팅 안내 아이콘 */
+.chat-promo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+
+    font-size: 20px;
+}
+
+/* 채팅 안내 제목 */
+.chat-promo strong {
+    display: block;
+    margin-bottom: 3px;
+
+    color: #ffffff;
+    font-size: 12px;
+}
+
+/* 채팅 안내 설명 */
+.chat-promo p {
+    margin: 0;
+
+    color: #b8c9ee;
+    font-size: 11px;
+    line-height: 1.6;
+}
