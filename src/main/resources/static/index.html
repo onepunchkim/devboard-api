@@ -3,60 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevBoard | 게시판</title>
-    <link rel="stylesheet" href="/css/style.css">
+
+    <title>DevBoard | 개발자 커뮤니티</title>
+
     <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/online-presence.css">
 </head>
 <body>
-<header class="header">
-    <a class="logo" href="/">DevBoard</a>
 
-    <nav id="navMenu">
+<!-- 상단 헤더 -->
+<header class="header">
+    <a class="logo" href="/">
+        <span class="logo-icon">D</span>
+        <span>DevBoard</span>
+    </a>
+
+    <!-- 게시글 검색창: 실제 검색 기능은 다음 단계에서 연결 -->
+    <div class="header-search">
+        <span class="search-icon" aria-hidden="true">⌕</span>
+        <input
+                id="headerSearch"
+                type="search"
+                placeholder="게시글 검색하기..."
+                aria-label="게시글 검색"
+        >
+    </div>
+
+    <!-- 로그인 상태에 따라 app.js에서 메뉴를 갱신 -->
+    <nav id="navMenu" class="header-nav">
         <a href="/login.html">로그인</a>
-        <a href="/signup.html">회원가입</a>
+        <a href="/signup.html" class="nav-signup">회원가입</a>
     </nav>
 </header>
 
 <main class="container">
-    <section class="welcome">
-        <h1>DevBoard</h1>
-        <p>개발 지식과 경험을 공유하는 공간입니다.</p>
+
+    <!-- 환영 배너 -->
+    <section class="welcome-banner">
+        <div class="welcome-content">
+            <span class="welcome-eyebrow">DEVBOARD COMMUNITY</span>
+
+            <h1>안녕하세요! 👋</h1>
+
+            <h2>DevBoard에 오신 것을 환영합니다.</h2>
+
+            <p>
+                개발 지식과 경험을 공유하고,<br>
+                함께 성장하는 공간입니다.
+            </p>
+        </div>
+
+        <div class="welcome-decoration" aria-hidden="true">
+            &lt;/&gt;
+        </div>
     </section>
 
-    <!-- 회원 목록 + 게시판을 나란히 배치 -->
+    <!-- 왼쪽 온라인 회원 목록 + 오른쪽 게시판 -->
     <div class="board-layout">
 
-        <!-- 왼쪽: 온라인 회원 목록 -->
+        <!-- 왼쪽 사이드바 -->
         <aside class="board-sidebar">
+
             <section class="online-members-panel">
+
                 <div class="online-members-heading">
-                    <h2>접속 중인 회원</h2>
-                    <span class="online-indicator"></span>
+                    <div class="online-title">
+                        <span class="online-indicator"></span>
+                        <h2>접속 중인 회원</h2>
+                    </div>
                 </div>
 
-                <p id="online-status" class="online-status">
+                <p id="online-status" class="online-status" role="status">
                     온라인 회원을 확인하는 중...
                 </p>
 
+                <!-- online-presence.js가 실제 회원 목록을 렌더링 -->
                 <ul id="online-members" class="online-members-list"></ul>
+
+                <div class="chat-promo">
+                    <span class="chat-promo-icon" aria-hidden="true">☏</span>
+                    <div>
+                        <strong>함께 이야기해요</strong>
+                        <p>회원 프로필을 눌러 대화를 시작하세요.</p>
+                    </div>
+                </div>
+
             </section>
         </aside>
 
-        <!-- 오른쪽: 기존 게시판 -->
+        <!-- 중앙 게시판 -->
         <section class="board">
+
             <div class="board-heading">
-                <h2>게시글 목록</h2>
-                <a id="writeButton" class="button"
-                   href="/write.html" hidden>글쓰기</a>
+                <div class="board-heading-text">
+                    <span class="section-eyebrow">COMMUNITY</span>
+                    <h2>게시판</h2>
+                    <p>다양한 개발 이야기를 자유롭게 나눠보세요.</p>
+                </div>
+
+                <a id="writeButton"
+                   class="button write-button"
+                   href="/write.html"
+                   hidden>
+                    <span aria-hidden="true">＋</span>
+                    글쓰기
+                </a>
             </div>
 
-            <p id="boardMessage" role="status">
+            <!-- 게시판 내부 검색창 -->
+            <div class="board-toolbar">
+                <label class="board-search">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                            id="postSearch"
+                            type="search"
+                            placeholder="제목, 내용, 작성자 검색..."
+                            aria-label="게시글 검색"
+                    >
+                </label>
+            </div>
+
+            <!-- 게시글 목록 상태 -->
+            <p id="boardMessage" class="board-message" role="status">
                 게시글을 불러오는 중입니다.
             </p>
 
+            <!-- app.js가 게시글 목록을 렌더링 -->
             <div id="postList" class="post-list"></div>
 
+            <!-- 페이지네이션 -->
             <div id="pagination" class="pagination">
                 <button id="prevButton" type="button" disabled>
                     이전
@@ -68,14 +144,24 @@
                     다음
                 </button>
             </div>
+
         </section>
 
     </div>
+
+    <!-- 하단 안내 -->
+    <footer class="site-footer">
+        <a class="footer-logo" href="/">DevBoard</a>
+        <p>개발하는 사람들의 소통 공간</p>
+    </footer>
+
 </main>
 
+<!-- 기존 JavaScript 기능 유지 -->
 <script src="/js/api.js"></script>
 <script src="/js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.1.1/bundles/stomp.umd.min.js"></script>
 <script src="/js/online-presence.js"></script>
+
 </body>
 </html>

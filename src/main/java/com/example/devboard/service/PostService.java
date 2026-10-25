@@ -41,26 +41,42 @@ public class PostService {
         return PostResponse.from(postRepository.save(post));
     }
 
-    //게시글 목록 조회 - 페이징
+    // 게시글 목록 조회 및 검색 - 페이징
     @Transactional(readOnly = true)
     public Page<PostResponse> findAll(String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size,
+
+        // 페이지 번호와 페이지 크기 검증
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "페이지 번호 또는 페이지 크기가 올바르지 않습니다."
+            );
+        }
+
+        // 최신 게시글이 먼저 나오도록 정렬
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
         Page<Post> posts;
 
         if (keyword == null || keyword.isBlank()) {
-            //검색어가 없으면 전체 게시글 조회
+            // 검색어가 없으면 전체 게시글 조회
             posts = postRepository.findAll(pageable);
         } else {
-            //검색어가 있으면 제목으로 검색
-            posts = postRepository.findByTitleContaining(
-                    keyword.trim(),
+            // 제목 또는 내용에 검색어가 포함된 게시글 검색
+            String searchKeyword = keyword.trim();
+
+            posts = postRepository.findByTitleContainingOrContentContaining(
+                    searchKeyword,
+                    searchKeyword,
                     pageable
             );
         }
 
+        // Entity를 응답 DTO로 변환
         return posts.map(PostResponse::from);
     }
 

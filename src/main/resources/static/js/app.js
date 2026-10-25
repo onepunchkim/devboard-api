@@ -109,32 +109,65 @@ async function loadPosts() {
 
         // 게시글 카드 생성
         posts.forEach((post) => {
+            // 게시글 전체를 감싸는 카드
             const card = document.createElement("article");
             card.className = "post-card";
 
-            const title = document.createElement("h3");
-            const titleLink = document.createElement("a");
+            // 게시글 제목 영역
+            const header = document.createElement("div");
+            header.className = "post-card-header";
 
+            const title = document.createElement("h3");
+            title.className = "post-card-title";
+
+            const titleLink = document.createElement("a");
             titleLink.href =
                 `/post-detail.html?id=${encodeURIComponent(post.id)}`;
-            titleLink.textContent = post.title;
+            titleLink.textContent = post.title || "제목 없음";
 
             title.appendChild(titleLink);
+            header.appendChild(title);
 
+            // 게시글 내용 영역
             const content = document.createElement("p");
-            content.textContent = post.content || "";
+            content.className = "post-card-content";
+            content.textContent = post.content || "작성된 내용이 없습니다.";
 
-            const author = document.createElement("small");
+            // 작성자와 작성일을 표시할 영역
+            const meta = document.createElement("div");
+            meta.className = "post-card-meta";
+
+            // 작성자 정보
+            const author = document.createElement("span");
+            author.className = "post-card-author";
             author.textContent = post.nickname
-                ? `작성자: ${post.nickname}`
-                : "";
+                ? `작성자 ${post.nickname}`
+                : "작성자 정보 없음";
 
-            const date = document.createElement("small");
-            date.textContent = post.createdAt
-                ? `작성일: ${new Date(post.createdAt).toLocaleString("ko-KR")}`
-                : "";
+            // 작성일 정보
+            const date = document.createElement("span");
+            date.className = "post-card-date";
 
-            card.append(title, content, author, date);
+            if (post.createdAt) {
+                const createdDate = new Date(post.createdAt);
+
+                // 날짜가 정상적으로 변환되는 경우에만 표시
+                date.textContent = Number.isNaN(createdDate.getTime())
+                    ? ""
+                    : createdDate.toLocaleString("ko-KR", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    });
+            }
+
+            // 카드 하단에 작성자와 작성일 배치
+            meta.append(author, date);
+
+            // 카드에 각 영역 추가
+            card.append(header, content, meta);
             postList.appendChild(card);
         });
 

@@ -1,73 +1,331 @@
+/* ========================================
+   1. 온라인 회원 패널
+   ======================================== */
 
 .online-members-panel {
-    margin: 20px 0;
-    padding: 20px;
-    background: #fff;
-    border: 1px solid #e3e7ef;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+
+    overflow: hidden;
+
+    background: transparent;
+    border: none;
     border-radius: 14px;
+
+    color: #f5f7ff;
 }
+
+/* ========================================
+   2. 패널 제목
+   ======================================== */
 
 .online-members-heading {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
+
+    padding: 20px 18px 12px;
 }
 
 .online-members-heading h2 {
     margin: 0;
-    color: #252b3a;
-    font-size: 18px;
+
+    color: #f5f7ff;
+    font-size: 15px;
+    font-weight: 700;
 }
 
+/* 온라인 표시 점 */
 .online-indicator,
 .online-dot {
     display: inline-block;
     flex-shrink: 0;
+
     width: 9px;
     height: 9px;
-    background: #20b875;
+
     border-radius: 50%;
+    background: #20d59a;
+
+    box-shadow:
+            0 0 8px rgba(32, 213, 154, 0.3);
 }
 
+/* ========================================
+   3. 온라인 상태 메시지
+   ======================================== */
+
 .online-status {
-    margin: 12px 0;
-    color: #778092;
-    font-size: 13px;
+    margin: 0;
+    padding: 0 18px 12px;
+
+    color: #a7b8da;
+    font-size: 12px;
+    line-height: 1.6;
 }
+
+/* ========================================
+   4. 온라인 회원 목록
+   ======================================== */
 
 .online-members-list {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 0;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 4px;
+
+    width: 100%;
+    max-height: 560px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
     margin: 0;
+    padding: 0 10px 14px;
+
     list-style: none;
 }
+
+/* 스크롤바 */
+.online-members-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.online-members-list::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #425477;
+}
+
+.online-members-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* 각 회원 항목 */
+.online-members-list li {
+    display: block;
+
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+
+    border-radius: 10px;
+
+    transition: background 0.2s ease;
+}
+
+.online-members-list li:hover {
+    background: rgba(111, 151, 255, 0.12);
+}
+
+/* ========================================
+   5. 회원 버튼
+   ======================================== */
 
 .online-member-button {
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 11px 14px;
-    color: #30384a;
-    background: #f7f8fc;
-    border: 1px solid #e4e8f1;
+    gap: 10px;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 54px;
+
+    padding: 10px 12px;
+
+    border: 1px solid transparent;
     border-radius: 10px;
+
+    background: transparent;
+    color: #e9efff;
+
+    text-align: left;
+
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+
+    transition:
+            background 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.2s ease;
 }
 
+/* 마우스를 올렸을 때 */
 .online-member-button:hover {
-    background: #eef2ff;
-    border-color: #aebcff;
+    border-color: rgba(125, 158, 255, 0.15);
+    background: rgba(104, 143, 255, 0.13);
 }
+
+/* 키보드 접근성 */
+.online-member-button:focus-visible {
+    outline: 2px solid #8eb2ff;
+    outline-offset: -2px;
+}
+
+/* 클릭 시 */
+.online-member-button:active {
+    transform: scale(0.99);
+}
+
+/* ========================================
+   6. 회원 이름
+   ======================================== */
 
 .online-member-name {
-    font-size: 14px;
+    display: block;
+
+    min-width: 0;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: #edf2ff;
+    font-size: 13px;
     font-weight: 600;
 }
 
-.online-member-button:focus-visible {
-    outline: 2px solid #4059d9;
-    outline-offset: 2px;
+/* ========================================
+   7. 회원 프로필 이미지
+   ======================================== */
+
+/* JS가 img 요소를 생성하는 경우 적용 */
+.online-member-button img {
+    width: 38px;
+    height: 38px;
+
+    flex-shrink: 0;
+
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+
+    object-fit: cover;
+}
+
+/* 회원 정보 영역이 존재하는 경우 */
+.online-member-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    min-width: 0;
+    flex: 1;
+}
+
+/* ========================================
+   8. 채팅 아이콘 및 보조 요소
+   ======================================== */
+
+/* 버튼 내부의 보조 아이콘 */
+.online-member-button .chat-icon {
+    margin-left: auto;
+
+    flex-shrink: 0;
+
+    color: #b8ccff;
+    font-size: 16px;
+}
+
+/* 온라인 상태 텍스트 */
+.online-member-status {
+    display: block;
+
+    color: #8fa9dd;
+    font-size: 11px;
+}
+
+/* ========================================
+   9. 선택된 회원
+   ======================================== */
+
+/* JS에서 selected 또는 active 클래스를 사용하는 경우 */
+.online-member-button.active,
+.online-member-button.selected,
+.online-members-list li.active .online-member-button {
+    border-color: rgba(123, 159, 255, 0.18);
+    background: #263f78;
+}
+
+/* ========================================
+   10. 채팅 안내 영역
+   ======================================== */
+
+.chat-promo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin: 0 12px 14px;
+    padding: 14px;
+
+    border: 1px solid rgba(132, 165, 255, 0.15);
+    border-radius: 12px;
+
+    background: linear-gradient(
+            135deg,
+            #263f78,
+            #24345e
+    );
+}
+
+.chat-promo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+
+    color: white;
+    font-size: 20px;
+}
+
+.chat-promo strong {
+    display: block;
+    margin-bottom: 3px;
+
+    color: #ffffff;
+    font-size: 12px;
+}
+
+.chat-promo p {
+    margin: 0;
+
+    color: #b8c9ee;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+/* ========================================
+   11. 모바일 화면
+   ======================================== */
+
+@media (max-width: 800px) {
+    .online-members-list {
+        max-height: 240px;
+    }
+
+    .online-members-heading {
+        padding: 16px 16px 10px;
+    }
+
+    .online-status {
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+
+    .online-members-list {
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+
+    .online-member-button {
+        min-height: 50px;
+    }
 }

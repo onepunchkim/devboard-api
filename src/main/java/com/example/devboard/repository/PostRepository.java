@@ -20,4 +20,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             String keyword,
             Pageable pageable
     );
+
+    // 제목 또는 내용에 검색어가 포함된 게시글 검색
+    Page<Post> findByTitleContainingOrContentContaining(
+            String titleKeyword,
+            String contentKeyword,
+            Pageable pageable
+    );
 }
