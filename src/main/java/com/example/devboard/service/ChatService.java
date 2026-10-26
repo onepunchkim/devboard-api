@@ -1,6 +1,7 @@
 package com.example.devboard.service;
 
 import com.example.devboard.entity.ChatMessage;
+import com.example.devboard.entity.ChatMessage.MessageType;
 import com.example.devboard.entity.ChatRoom;
 import com.example.devboard.entity.ChatRoomMember;
 import com.example.devboard.entity.Member;
@@ -30,7 +31,8 @@ public class ChatService {
     public ChatService(
             ChatRoomRepository chatRoomRepository,
             ChatRoomMemberRepository chatRoomMemberRepository,
-            MemberRepository memberRepository, ChatMessageRepository chatMessageRepository
+            MemberRepository memberRepository,
+            ChatMessageRepository chatMessageRepository
     ) {
         this.chatRoomRepository = chatRoomRepository;
         this.chatRoomMemberRepository = chatRoomMemberRepository;
@@ -48,7 +50,7 @@ public class ChatService {
             );
         }
 
-        // 실제 DB에 존재하는 회원인지 확인한다.
+        // DB에 존재하는 회원인지 확인한다.
         Member currentMember = memberRepository.findById(currentMemberId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("로그인 회원을 찾을 수 없습니다.")
@@ -59,11 +61,10 @@ public class ChatService {
                         new IllegalArgumentException("상대 회원을 찾을 수 없습니다.")
                 );
 
-        // ChatRoom 생성자에서 ID를 정렬하므로 작은 ID를 먼저 전달한다.
+        // 회원 ID 순서대로 기존 채팅방을 찾는다.
         Long lowId = Math.min(currentMemberId, targetMemberId);
         Long highId = Math.max(currentMemberId, targetMemberId);
 
-        // 기존 방이 있으면 재사용한다.
         return chatRoomRepository
                 .findByMemberLow_IdAndMemberHigh_Id(lowId, highId)
                 .orElseGet(() -> {
@@ -71,11 +72,10 @@ public class ChatService {
                             new ChatRoom(currentMember, targetMember)
                     );
 
-                    // 두 회원을 참여자로 등록한다.
+                    // 두 회원을 채팅방 참여자로 등록한다.
                     chatRoomMemberRepository.save(
                             new ChatRoomMember(room, currentMember)
                     );
-
                     chatRoomMemberRepository.save(
                             new ChatRoomMember(room, targetMember)
                     );
@@ -83,22 +83,20 @@ public class ChatService {
                     return room;
                 });
     }
+
     // 로그인한 회원이 참여 중인 채팅방 목록을 조회한다.
     public List<ChatRoomSummary> getMyRooms(Long memberId) {
 
-        // 탈퇴했거나 존재하지 않는 회원의 접근을 차단한다.
         if (!memberRepository.existsById(memberId)) {
             throw new IllegalArgumentException("회원 정보를 찾을 수 없습니다.");
         }
 
-        // 로그인한 회원이 참여 중인 채팅방을 조회하고,
-        // 상대 회원의 정보만 DTO로 변환해서 반환한다.
         return chatRoomMemberRepository.findByMember_Id(memberId)
                 .stream()
                 .map(roomMember -> {
                     ChatRoom room = roomMember.getChatRoom();
 
-                    // 채팅방의 두 참여자 중 로그인한 회원이 아닌 사람을 찾는다.
+                    // 로그인한 회원이 아닌 상대 회원을 찾는다.
                     Member partner;
 
                     if (room.getMemberLow().getId().equals(memberId)) {
@@ -118,7 +116,7 @@ public class ChatService {
                 .toList();
     }
 
-    // 채팅방 목록 API에서 반환할 데이터
+    // 채팅방 목록 응답 DTO
     public record ChatRoomSummary(
             Long roomId,
             Long partnerMemberId,
@@ -138,16 +136,56 @@ public class ChatService {
                 );
     }
 
-    // 채팅 메시지를 저장하고 DTO로 반환한다.
+    // 기존 텍스트 메시지를 저장한다.
     public ChatMessageResponse sendMessage(
             Long roomId,
             Long senderId,
             String content
     ) {
-        // 발신자가 해당 채팅방의 참여자인지 검증한다.
+        // 기존 텍스트 메시지 기능을 유지한다.
+        return saveMessage(
+                roomId,
+                senderId,
+                content,
+                MessageType.TEXT,
+                null
+        );
+    }
+
+    // 사진 메시지를 저장한다.
+    // imageUrl은 서버에 업로드된 사진의 경로를 전달받는다.
+    public ChatMessageResponse sendImageMessage(
+            Long roomId,
+            Long senderId,
+            String imageUrl,
+            String caption
+    ) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            throw new IllegalArgumentException("사진 경로가 필요합니다.");
+        }
+
+        // 사진 메시지도 일반 메시지와 동일한 권한 검증 및 저장 절차를 거친다.
+        return saveMessage(
+                roomId,
+                senderId,
+                caption,
+                MessageType.IMAGE,
+                imageUrl
+        );
+    }
+
+    // 텍스트 및 사진 메시지의 공통 저장 처리
+    private ChatMessageResponse saveMessage(
+            Long roomId,
+            Long senderId,
+            String content,
+            MessageType messageType,
+            String imageUrl
+    ) {
+        // 발신자가 채팅방 참여자인지 확인한다.
         validateRoomMember(roomId, senderId);
 
-        // 채팅방 정보를 조회한다.
+        // 채팅방을 조회한다.
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("채팅방을 찾을 수 없습니다.")
@@ -159,22 +197,22 @@ public class ChatService {
                         new IllegalArgumentException("회원 정보를 찾을 수 없습니다.")
                 );
 
-        // 메시지를 생성하고 DB에 저장한다.
-        ChatMessage message = new ChatMessage(room, sender, content);
+        // 메시지를 생성하고 저장한다.
+        ChatMessage message = new ChatMessage(
+                room,
+                sender,
+                content,
+                messageType,
+                imageUrl
+        );
+
         ChatMessage savedMessage = chatMessageRepository.save(message);
 
-        // 채팅방의 마지막 메시지 시간을 갱신한다.
+        // 마지막 메시지 시간을 갱신한다.
         room.updateLastMessageAt(savedMessage.getCreatedAt());
 
-        // 트랜잭션 안에서 필요한 정보를 DTO에 담는다.
-        return new ChatMessageResponse(
-                savedMessage.getId(),
-                roomId,
-                sender.getId(),
-                sender.getNickname(),
-                savedMessage.getContent(),
-                savedMessage.getCreatedAt()
-        );
+        // 실시간 전송 및 API 응답에 사용할 DTO를 반환한다.
+        return toResponse(savedMessage);
     }
 
     // 채팅 기록을 페이지 단위로 조회한다.
@@ -184,7 +222,7 @@ public class ChatService {
             int page,
             int size
     ) {
-        // 채팅방 참여자만 기록을 조회할 수 있다.
+        // 채팅방 참여자만 조회할 수 있다.
         validateRoomMember(roomId, memberId);
 
         if (page < 0) {
@@ -205,28 +243,35 @@ public class ChatService {
                 Sort.by(Sort.Direction.DESC, "id")
         );
 
-        // 서비스 트랜잭션 안에서 조회하고 DTO로 변환한다.
+        // 최신순으로 조회한 후 메시지 DTO로 변환한다.
         return chatMessageRepository
                 .findByChatRoom_IdOrderByIdDesc(roomId, pageable)
-                .map(message -> new ChatMessageResponse(
-                        message.getId(),
-                        roomId,
-                        message.getSender().getId(),
-                        message.getSender().getNickname(),
-                        message.getContent(),
-                        message.getCreatedAt()
-                ));
+                .map(this::toResponse);
     }
 
-    // 컨트롤러에 반환할 메시지 DTO
+    // 엔티티를 응답 DTO로 변환한다.
+    private ChatMessageResponse toResponse(ChatMessage message) {
+        return new ChatMessageResponse(
+                message.getId(),
+                message.getChatRoom().getId(),
+                message.getSender().getId(),
+                message.getSender().getNickname(),
+                message.getContent(),
+                message.getMessageType(),
+                message.getImageUrl(),
+                message.getCreatedAt()
+        );
+    }
+
+    // 메시지 응답 DTO
     public record ChatMessageResponse(
             Long messageId,
             Long roomId,
             Long senderId,
             String senderNickname,
             String content,
+            MessageType messageType,
+            String imageUrl,
             LocalDateTime createdAt
     ) {}
-
-
 }

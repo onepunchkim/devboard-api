@@ -131,23 +131,44 @@
         <!-- 채팅 상태 메시지 -->
         <p id="chat-status" class="chat-status" role="status"></p>
 
+
         <!-- 메시지 입력 및 전송 -->
         <form id="message-form" class="message-form">
 
+            <!-- 사진 파일 선택 버튼 -->
+            <button
+                    id="image-button"
+                    class="image-button"
+                    type="button"
+                    disabled
+                    aria-label="사진 선택">
+                📷 사진
+            </button>
+
+            <!-- 실제 파일 입력창은 숨기고 버튼으로 연다 -->
+            <input
+                    id="image-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    hidden
+            >
+
+            <!-- 텍스트 메시지 입력 -->
             <textarea
                     id="message-input"
                     rows="2"
                     maxlength="2000"
                     placeholder="메시지를 입력하세요. (Enter 전송, Shift+Enter 줄바꿈)"
                     disabled
-                    required
             ></textarea>
 
+            <!-- 텍스트 전송 버튼 -->
             <button id="send-button" type="submit" disabled>
                 전송
             </button>
 
         </form>
+
 
     </section>
 

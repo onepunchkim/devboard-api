@@ -25,3 +25,9 @@ logging:
 jwt:
   secret: ${JWT_SECRET}
   expiration-ms: 3600000
+
+# 채팅 사진 업로드 설정
+chat:
+  image:
+    upload-dir: ./uploads/chat
+    max-size: 5242880
