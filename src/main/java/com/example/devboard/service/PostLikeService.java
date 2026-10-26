@@ -9,6 +9,9 @@ import com.example.devboard.repository.PostRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -84,6 +87,34 @@ public class PostLikeService {
 
         //해당 게시글의 좋아요 개수 반환
         return postLikeRepository.countByPostId(postId);
+    }
+
+    // 여러 게시글의 좋아요 수를 한 번에 조회
+    @Transactional(readOnly = true)
+    public Map<Long, Long> getLikeCounts(List<Long> postIds) {
+
+        // 조회할 게시글 ID가 없으면 빈 결과 반환
+        if (postIds == null || postIds.isEmpty()) {
+            return Map.of();
+        }
+
+        // 게시글 ID별 좋아요 수를 저장할 Map 생성
+        Map<Long, Long> likeCounts = new HashMap<>();
+
+        // DB에서 게시글별 좋아요 수를 일괄 조회
+        List<Object[]> results =
+                postLikeRepository.countLikesByPostIds(postIds);
+
+        // 조회 결과를 게시글 ID와 좋아요 수의 Map으로 변환
+        for (Object[] result : results) {
+            Long postId = ((Number) result[0]).longValue();
+            Long count = ((Number) result[1]).longValue();
+
+            likeCounts.put(postId, count);
+        }
+
+        // 좋아요가 없는 게시글은 프론트엔드에서 0으로 처리할 수 있다.
+        return likeCounts;
     }
 
     //특정 회원이 해당 게시글에 좋아요를 눌렀는지 조회

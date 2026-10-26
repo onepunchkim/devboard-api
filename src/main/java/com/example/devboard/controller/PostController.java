@@ -1,6 +1,7 @@
 package com.example.devboard.controller;
 
 import com.example.devboard.dto.response.PostResponse;
+import com.example.devboard.service.PostLikeService;
 import com.example.devboard.service.PostService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -8,14 +9,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
 
     private final PostService postService;
+    private final PostLikeService postLikeService;
 
-    public PostController(PostService postService) {
+    public PostController(PostService postService, PostLikeService postLikeService) {
         this.postService = postService;
+        this.postLikeService = postLikeService;
     }
 
     //게시글 생성
@@ -87,5 +94,22 @@ public class PostController {
 
     //게시글 생성 요청 데이터
     public record PostRequest(String title, String content) {
+    }
+
+    // 여러 게시글의 좋아요 수를 한 번에 조회
+    @GetMapping("/counts")
+    public Map<Long, Long> getLikeCounts(
+            @RequestParam List<Long> postIds
+    ) {
+        // 전달받은 게시글 ID 목록으로 좋아요 수를 일괄 조회
+        Map<Long, Long> likeCounts = postLikeService.getLikeCounts(postIds);
+
+        // 요청한 게시글 중 좋아요 수가 없는 게시글은 0으로 반환
+        return postIds.stream()
+                .distinct()
+                .collect(Collectors.toMap(
+                        postId -> postId,
+                        postId -> likeCounts.getOrDefault(postId, 0L)
+                ));
     }
 }

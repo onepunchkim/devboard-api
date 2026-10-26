@@ -190,6 +190,33 @@ async function loadPosts() {
             return;
         }
 
+        // 현재 페이지 게시글 ID 목록 추출
+        const postIds = posts.map((post) => post.id);
+
+        // 게시글별 좋아요 수를 저장할 객체
+        let likeCounts = {};
+
+        // 게시글이 있을 때만 좋아요 수 일괄 조회
+        if (postIds.length > 0) {
+            // 여러 게시글 ID를 쿼리 파라미터로 전달
+            const likeParams = new URLSearchParams();
+
+            postIds.forEach((postId) => {
+                likeParams.append("postIds", String(postId));
+            });
+
+            // 백엔드에서 게시글별 좋아요 수 조회
+            likeCounts = await apiRequest(
+                `/posts/counts?${likeParams.toString()}`,
+                { method: "GET" }
+            );
+
+            // 조회 중 새로운 검색이나 페이지 요청이 발생했다면 중단
+            if (requestId !== latestRequestId) {
+                return;
+            }
+        }
+
         // 조회 결과가 있으면 안내 메시지 제거
         boardMessage.textContent = "";
 
@@ -223,6 +250,14 @@ async function loadPosts() {
             const meta = document.createElement("div");
             meta.className = "post-card-meta";
 
+            // 게시글 좋아요 수 표시 영역
+            const likeInfo = document.createElement("span");
+            likeInfo.className = "post-card-likes";
+
+            // 좋아요 수가 없으면 0으로 표시
+            const likeCount = likeCounts[String(post.id)] ?? 0;
+            likeInfo.textContent = `♡ 좋아요 ${likeCount}`;
+
             const author = document.createElement("span");
             author.className = "post-card-author";
             author.textContent = post.nickname
@@ -247,7 +282,7 @@ async function loadPosts() {
                     });
             }
 
-            meta.append(author, date);
+            meta.append(author, date, likeInfo);
             card.append(header, content, meta);
             postList.appendChild(card);
         });
