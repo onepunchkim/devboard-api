@@ -32,7 +32,7 @@ public class PostLikeController {
 
         return Map.of(
                 "postId", postId,
-                "like", true,
+                "liked", true,
                 "message", "좋아요를 등록했습니다."
         );
     }
@@ -66,7 +66,7 @@ public class PostLikeController {
         String email = authentication.getName();
 
         //좋아요 수와 현재 회원의 좋아요 여부 조회
-        long likeCount = postLikeService.getLIkeCount(postId);
+        long likeCount = postLikeService.getLikeCount(postId);
         boolean liked = postLikeService.hasLikedByEmail(email, postId);
 
         return Map.of(

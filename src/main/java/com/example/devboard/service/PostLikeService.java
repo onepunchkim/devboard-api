@@ -48,27 +48,34 @@ public class PostLikeService {
         postLikeRepository.save(postLike);
     }
 
-    //특정 회원의 게시글 좋아요를 취소
+    // 특정 회원의 게시글 좋아요를 취소
     @Transactional
     public void unlikePost(Long memberId, Long postId) {
 
-        //게시글이 존재하는지 확인
+        // 회원이 실제로 존재하는지 확인
+        if (!memberRepository.existsById(memberId)) {
+            throw new IllegalArgumentException("회원을 찾을 수 없습니다.");
+        }
+
+        // 게시글이 실제로 존재하는지 확인
         if (!postRepository.existsById(postId)) {
             throw new IllegalArgumentException("게시글을 찾을 수 없습니다.");
         }
 
-        //회원의 좋아요 기록 조회
+        // 해당 회원이 해당 게시글에 등록한 좋아요 기록 조회
         PostLike postLike = postLikeRepository
                 .findByMemberIdAndPostId(memberId, postId)
-                .orElseThrow(() -> new IllegalArgumentException("좋아요 기록이 없습니다."));
+                .orElseThrow(() ->
+                        new IllegalArgumentException("좋아요 기록이 없습니다.")
+                );
 
-        //조회한 좋아요 기록 삭제
+        // 조회한 좋아요 기록 삭제
         postLikeRepository.delete(postLike);
     }
 
     //게시글에 등록된 전체 좋아요 수 조회
     @Transactional(readOnly = true)
-    public long getLIkeCount(Long postId) {
+    public long getLikeCount(Long postId) {
 
         //존재하지 않는 게시글에 대한 조회 방지
         if (!postRepository.existsById(postId)) {
