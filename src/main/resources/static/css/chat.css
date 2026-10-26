@@ -1,20 +1,20 @@
-/* ========================================
-   1. 기본 설정
-   ======================================== */
+ /* ========================================
+       1. 기본 설정
+       ======================================== */
 
-/* 모든 요소의 크기 계산 기준 통일 */
+    /* 모든 요소의 크기 계산 기준 통일 */
 * {
     box-sizing: border-box;
 }
 
-/* 페이지 바깥쪽 배경 */
+/* 페이지 기본 설정 */
 html,
 body {
     min-height: 100%;
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: Arial, "Malgun Gothic", sans-serif;
 
-    /* 연한 파란색 배경 유지 */
+    /* 페이지 바깥 배경 */
     background: #eaf3ff;
     color: #e5e7eb;
 }
@@ -22,7 +22,8 @@ body {
 /* 입력 요소의 폰트 통일 */
 button,
 input,
-textarea {
+textarea,
+select {
     font: inherit;
 }
 
@@ -36,43 +37,129 @@ a {
     color: inherit;
 }
 
+/* 숨김 속성이 있는 요소는 표시하지 않음 */
+[hidden] {
+    display: none !important;
+}
+
 
 /* ========================================
    2. 상단 헤더
+   메인 페이지와 동일한 디자인
    ======================================== */
 
+/* 채팅 페이지 상단 배너 */
 .top-bar {
-    height: 68px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 0 32px;
+    gap: 32px;
 
-    background: #1c2636;
-    border-bottom: 1px solid #344156;
+    width: 100%;
+    min-height: 72px;
+    padding: 12px 32px;
+
+    /* 메인 페이지와 동일한 반투명 흰색 배경 */
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid var(--border);
+
+    backdrop-filter: blur(14px);
 }
 
-/* 로고 */
-.logo {
-    color: #60a5fa;
-    font-size: 24px;
-    font-weight: 700;
+/* DevBoard 로고 */
+.top-bar .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    flex-shrink: 0;
+
+    color: #1746ad;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -1px;
+
     text-decoration: none;
 }
 
-/* 헤더 오른쪽 영역 */
-.header-actions {
+/* 방문 및 마우스 오버 상태에서도 로고 색상 유지 */
+.top-bar .logo:link,
+.top-bar .logo:visited,
+.top-bar .logo:hover,
+.top-bar .logo:active {
+    color: #1746ad;
+}
+
+/* 로고 아이콘 */
+.top-bar .logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    /* 메인 페이지와 동일한 파란색 그라데이션 */
+    background: linear-gradient(
+            135deg,
+            #5590ff,
+            #2455e8
+    );
+
+    color: #ffffff;
+    font-size: 23px;
+    font-weight: 800;
+
+    box-shadow: 0 4px 10px rgba(49, 104, 245, 0.2);
+}
+
+/* 헤더 오른쪽 사용자 정보 영역 */
+.top-bar .header-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 16px;
-    color: #e5e7eb;
+
+    flex-shrink: 0;
+
+    color: var(--text);
 }
 
 /* 현재 로그인한 사용자 */
-#current-user {
-    color: #e5e7eb;
+.top-bar #current-user {
+    color: var(--text);
     font-size: 14px;
+}
+
+/* 로그아웃 버튼 */
+.top-bar .secondary-button {
+    padding: 9px 14px;
+
+    color: var(--text);
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    transition:
+            background 0.2s,
+            border-color 0.2s;
+}
+
+/* 로그아웃 버튼 마우스 오버 */
+.top-bar .secondary-button:hover {
+    color: var(--text);
+    background: var(--primary-light);
+    border-color: var(--primary);
 }
 
 
@@ -88,6 +175,8 @@ a {
     gap: 0;
 
     width: min(1200px, calc(100% - 32px));
+
+    /* 상단 헤더 높이를 제외한 채팅 영역 */
     height: calc(100vh - 108px);
     min-height: 520px;
 
@@ -96,6 +185,7 @@ a {
 
     color: #e5e7eb;
     background: #161d2b;
+
     border: 1px solid #344156;
     border-radius: 14px;
 }
@@ -105,12 +195,14 @@ a {
    4. 왼쪽 채팅방 목록
    ======================================== */
 
+/* 사이드바 */
 .sidebar {
     min-width: 0;
     padding: 24px 18px;
 
     color: #e5e7eb;
     background: #1c2636;
+
     border-right: 1px solid #344156;
 
     overflow-y: auto;
@@ -142,24 +234,43 @@ a {
 /* 채팅방 생성 폼 */
 .create-room-form {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 8px;
+
+    width: 100%;
+    max-width: none;
     margin-bottom: 28px;
 
     padding: 12px;
+
     background: #161d2b;
     border: 1px solid #344156;
     border-radius: 10px;
 }
 
-/* 채팅방 이름 또는 회원 ID 입력창 */
+/* 채팅방 생성 폼 내부 라벨 */
+.create-room-form label {
+    margin-top: 0;
+}
+
+/* 입력창과 생성 버튼을 배치하는 영역 */
 .create-room-input {
-    flex: 1 1 100%;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+
     width: 100%;
     min-width: 0;
-    min-height: 44px;
+}
 
-    padding: 11px 12px;
+/* 회원 ID 입력창 */
+.create-room-input input {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    min-height: 40px;
+
+    padding: 9px 10px;
 
     color: #f9fafb;
     background: #202a3a;
@@ -170,19 +281,22 @@ a {
 }
 
 /* 입력창 안내 문구 */
-.create-room-input::placeholder {
+.create-room-input input::placeholder {
     color: #aab6c8;
 }
 
 /* 입력창 포커스 */
-.create-room-input:focus {
+.create-room-input input:focus {
     border-color: #60a5fa;
+
     box-shadow: 0 0 0 2px rgb(96 165 250 / 15%);
 }
 
-/* 채팅방 생성 폼의 버튼 */
-.create-room-form button {
-    min-height: 36px;
+/* 채팅방 생성 버튼 */
+.create-room-input button {
+    flex-shrink: 0;
+
+    min-height: 40px;
     padding: 8px 12px;
 
     color: #ffffff;
@@ -190,12 +304,25 @@ a {
 
     border: 0;
     border-radius: 6px;
+
+    transition: background 0.2s;
+}
+
+/* 채팅방 생성 버튼 마우스 오버 */
+.create-room-input button:hover:not(:disabled) {
+    background: #1d4ed8;
 }
 
 /* 비활성화된 생성 버튼 */
-.create-room-form button:disabled {
+.create-room-input button:disabled {
     cursor: not-allowed;
     opacity: 0.5;
+}
+
+/* 폼 도움말 */
+.create-room-form .help-text {
+    margin: 4px 0 0;
+    font-size: 12px;
 }
 
 /* 채팅방 목록 제목 영역 */
@@ -244,13 +371,17 @@ a {
     color: #e5e7eb;
     text-align: left;
     text-decoration: none;
+
     overflow-wrap: anywhere;
 
     background: #273244;
+
     border: 1px solid #3b475b;
     border-radius: 9px;
 
-    transition: background 0.2s, border-color 0.2s;
+    transition:
+            background 0.2s,
+            border-color 0.2s;
 }
 
 /* 채팅방 마우스 오버 */
@@ -270,11 +401,17 @@ a {
     border-color: #3b82f6;
 }
 
+/* 채팅방 목록 상태 안내 */
+#room-list-status {
+    overflow-wrap: anywhere;
+}
+
 
 /* ========================================
    5. 오른쪽 채팅 영역
    ======================================== */
 
+/* 채팅 패널 */
 .chat-panel {
     display: flex;
     flex-direction: column;
@@ -311,6 +448,8 @@ a {
 
 /* 연결 상태 */
 #connection-status {
+    margin: 4px 0 0;
+
     color: #b8c4d6;
     font-size: 12px;
 }
@@ -326,12 +465,14 @@ a {
    6. 메시지 목록
    ======================================== */
 
+/* 메시지 목록 영역 */
 .message-list {
     display: flex;
     flex: 1;
     flex-direction: column;
     gap: 14px;
 
+    min-width: 0;
     min-height: 0;
     padding: 24px;
 
@@ -359,6 +500,7 @@ a {
     align-items: flex-start;
 
     max-width: 75%;
+
     color: #e5e7eb;
 }
 
@@ -390,6 +532,7 @@ a {
     border-radius: 14px;
 
     line-height: 1.5;
+
     overflow-wrap: anywhere;
     white-space: pre-wrap;
 }
@@ -414,10 +557,14 @@ a {
    7. 메시지 입력 영역
    ======================================== */
 
+/* 메시지 입력 폼 */
 .message-form {
     display: flex;
     align-items: flex-end;
     gap: 10px;
+
+    width: 100%;
+    max-width: none;
 
     padding: 14px 18px;
 
@@ -444,7 +591,10 @@ a {
     border-radius: 10px;
     outline: none;
 
+    font-family: inherit;
+    font-size: 14px;
     line-height: 20px;
+
     resize: none;
     overflow-y: auto;
 }
@@ -457,6 +607,7 @@ a {
 /* 입력창 포커스 */
 .message-form textarea:focus {
     border-color: #60a5fa;
+
     box-shadow: 0 0 0 2px rgb(96 165 250 / 12%);
 }
 
@@ -492,6 +643,7 @@ a {
 
 /* 채팅 상태 안내 */
 #chat-status {
+    margin: 0;
     padding: 0 18px 10px;
 
     color: #b8c4d6;
@@ -515,7 +667,9 @@ a {
 
     text-decoration: none;
 
-    transition: background 0.2s, border-color 0.2s;
+    transition:
+            background 0.2s,
+            border-color 0.2s;
 }
 
 /* 보조 버튼 마우스 오버 */
@@ -540,12 +694,19 @@ a {
 
     border: 1px solid #3b475b;
     border-radius: 8px;
+
+    transition: background 0.2s;
 }
 
 /* 아이콘 버튼 마우스 오버 */
 .icon-button:hover {
     color: #ffffff;
     background: #334158;
+}
+
+/* 일반 상태 텍스트 */
+.status-text {
+    overflow-wrap: anywhere;
 }
 
 
@@ -575,4 +736,168 @@ a {
 .sidebar::-webkit-scrollbar-track,
 .message-list::-webkit-scrollbar-track {
     background: transparent;
+}
+
+
+/* ========================================
+   10. 반응형 디자인
+   ======================================== */
+
+/* 태블릿 및 작은 화면 */
+@media (max-width: 768px) {
+    /* 상단 헤더 간격 조정 */
+    .top-bar {
+        gap: 16px;
+        padding: 12px 20px;
+    }
+
+    /* 로고 크기 조정 */
+    .top-bar .logo {
+        gap: 8px;
+        font-size: 22px;
+    }
+
+    .top-bar .logo-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 21px;
+    }
+
+    /* 채팅 레이아웃 너비 조정 */
+    .chat-layout {
+        grid-template-columns: 250px minmax(0, 1fr);
+        width: calc(100% - 24px);
+        height: calc(100vh - 100px);
+        min-height: 480px;
+        margin: 12px auto;
+    }
+
+    /* 메시지 목록 여백 조정 */
+    .message-list {
+        padding: 18px;
+    }
+
+    /* 채팅 헤더 여백 조정 */
+    .chat-header {
+        padding: 16px;
+    }
+}
+
+/* 모바일 화면 */
+@media (max-width: 560px) {
+    /* 헤더 배치 */
+    .top-bar {
+        gap: 10px;
+        min-height: 64px;
+        padding: 10px 14px;
+    }
+
+    /* 로고 크기 */
+    .top-bar .logo {
+        gap: 7px;
+        font-size: 19px;
+        letter-spacing: -0.5px;
+    }
+
+    .top-bar .logo-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        font-size: 19px;
+    }
+
+    /* 사용자 정보와 로그아웃 버튼 간격 */
+    .top-bar .header-actions {
+        gap: 8px;
+    }
+
+    .top-bar #current-user {
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+    }
+
+    .top-bar .secondary-button {
+        padding: 7px 9px;
+        font-size: 12px;
+    }
+
+    /* 채팅 레이아웃 */
+    .chat-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(150px, 35%) minmax(280px, 1fr);
+
+        width: calc(100% - 16px);
+        height: calc(100vh - 88px);
+        min-height: 450px;
+
+        margin: 8px auto;
+    }
+
+    /* 모바일에서는 사이드바를 위쪽에 배치 */
+    .sidebar {
+        padding: 14px;
+        border-right: none;
+        border-bottom: 1px solid #344156;
+    }
+
+    .sidebar h1 {
+        margin-top: 0;
+        font-size: 20px;
+    }
+
+    .create-room-form {
+        margin-bottom: 16px;
+        padding: 10px;
+    }
+
+    .room-heading {
+        margin: 16px 0 10px;
+    }
+
+    /* 채팅방 목록이 길어지면 내부 스크롤 사용 */
+    .room-list {
+        gap: 6px;
+    }
+
+    .room-list button,
+    .room-list a {
+        padding: 10px;
+    }
+
+    /* 메시지 영역 */
+    .chat-header {
+        min-height: 60px;
+        padding: 12px;
+    }
+
+    #partner-name {
+        font-size: 15px;
+    }
+
+    .message-list {
+        padding: 14px;
+        gap: 10px;
+    }
+
+    .message-row {
+        max-width: 90%;
+    }
+
+    /* 메시지 입력 영역 */
+    .message-form {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .message-form textarea {
+        font-size: 13px;
+    }
+
+    .message-form button {
+        min-width: 58px;
+        padding: 0 12px;
+    }
 }

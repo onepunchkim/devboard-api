@@ -3,47 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>DevBoard - 실시간 채팅</title>
 
-    <link rel="stylesheet" href="/css/chat.css">
-
-    <!-- 분리한 CSS가 정상 작동하는지 확인하기 위해 임시 비활성화 -->
-    <!-- <link rel="stylesheet" href="/css/style.css"> -->
-
-    <!-- 분리한 공통 및 레이아웃 스타일 -->
+    <!-- 공통 스타일 -->
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/layout.css">
 
-    <!-- 분리한 기능별 스타일 -->
+    <!-- 공통 헤더 및 기능별 스타일 -->
     <link rel="stylesheet" href="/css/header.css">
     <link rel="stylesheet" href="/css/online-members.css">
     <link rel="stylesheet" href="/css/board.css">
     <link rel="stylesheet" href="/css/post-detail.css">
-
-    <!-- 반응형 스타일은 마지막에 적용 -->
     <link rel="stylesheet" href="/css/responsive.css">
 
+    <!-- 채팅 페이지 전용 스타일은 마지막에 적용 -->
+    <link rel="stylesheet" href="/css/chat.css">
 </head>
 <body>
-<header class="top-bar">
-    <a href="/index.html" class="logo">DevBoard</a>
 
+<!-- 상단 헤더: 메인 페이지와 동일한 디자인 -->
+<header class="top-bar">
+
+    <!-- DevBoard 로고와 파란색 D 아이콘 -->
+    <a href="/index.html" class="logo">
+        <span class="logo-icon">D</span>
+        <span>DevBoard</span>
+    </a>
+
+    <!-- 로그인 사용자 정보 및 로그아웃 -->
     <div class="header-actions">
         <span id="current-user">로그인 확인 중...</span>
-        <button id="logout-button" class="secondary-button" type="button">
+
+        <button
+                id="logout-button"
+                class="secondary-button"
+                type="button">
             로그아웃
         </button>
     </div>
+
 </header>
 
+<!-- 채팅 화면 -->
 <main class="chat-layout">
+
+    <!-- 왼쪽 사이드바 -->
     <aside class="sidebar">
+
         <h1>채팅</h1>
 
+        <!-- 새 채팅방 생성 -->
         <form id="create-room-form" class="create-room-form">
+
             <label for="target-member-id">상대방 회원 ID</label>
 
             <div class="create-room-input">
+
                 <input
                         id="target-member-id"
                         type="number"
@@ -51,48 +67,73 @@
                         placeholder="회원 ID 입력"
                         required
                 >
+
                 <button type="submit">대화 시작</button>
+
             </div>
 
             <p class="help-text">
                 상대방의 회원 ID를 입력하면 1:1 채팅방을 만들거나 기존 방을 열어요.
             </p>
+
         </form>
 
+        <!-- 채팅방 목록 제목 및 새로고침 -->
         <div class="room-heading">
+
             <h2>채팅방 목록</h2>
-            <button id="refresh-rooms-button"
+
+            <button
+                    id="refresh-rooms-button"
                     class="icon-button"
                     type="button"
                     aria-label="채팅방 목록 새로고침">
                 ↻
             </button>
+
         </div>
 
+        <!-- 채팅방 목록 상태 -->
         <p id="room-list-status" class="status-text"></p>
+
+        <!-- JavaScript가 채팅방 목록을 렌더링 -->
         <ul id="room-list" class="room-list"></ul>
+
     </aside>
 
+    <!-- 오른쪽 채팅 영역 -->
     <section class="chat-panel">
+
+        <!-- 채팅 상대방 및 연결 상태 -->
         <div class="chat-header">
+
             <div>
                 <h2 id="partner-name">채팅방을 선택하세요</h2>
+
                 <p id="connection-status" class="connection-status">
                     연결되지 않음
                 </p>
             </div>
+
             <span id="room-id-label" class="room-id-label"></span>
+
         </div>
 
+        <!-- 채팅 메시지 목록 -->
         <div id="message-list" class="message-list">
+
             <div class="empty-state">
                 왼쪽에서 채팅방을 선택하거나 새 대화를 시작하세요.
             </div>
+
         </div>
 
+        <!-- 채팅 상태 메시지 -->
         <p id="chat-status" class="chat-status" role="status"></p>
 
+        <!-- 메시지 입력 및 전송 -->
         <form id="message-form" class="message-form">
+
             <textarea
                     id="message-input"
                     rows="2"
@@ -105,12 +146,17 @@
             <button id="send-button" type="submit" disabled>
                 전송
             </button>
+
         </form>
+
     </section>
+
 </main>
 
+<!-- 기존 JavaScript 기능 유지 -->
 <script src="/js/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.1.1/bundles/stomp.umd.min.js"></script>
 <script src="/js/chat.js"></script>
+
 </body>
 </html>
