@@ -1,36 +1,16 @@
 package com.example.devboard.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+/**
+ * 채팅 사진의 공개 정적 파일 제공을 비활성화한다.
+ *
+ * 사진은 ResourceHandler로 직접 공개하지 않고,
+ * 이후 인증과 채팅방 참여 여부를 확인하는 컨트롤러로 제공한다.
+ */
 @Configuration
 public class ChatImageWebConfig implements WebMvcConfigurer {
-
-    private final String uploadDir;
-
-    public ChatImageWebConfig(
-            @Value("${chat.image.upload-dir:./uploads/chat}")
-            String uploadDir
-    ) {
-        this.uploadDir = uploadDir;
-    }
-
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 업로드 URL을 실제 저장 디렉터리에 연결한다.
-        Path directory = Paths.get(uploadDir)
-                .toAbsolutePath()
-                .normalize();
-
-        String location = directory.toUri().toString();
-
-        registry.addResourceHandler("/uploads/chat/**")
-                .addResourceLocations(location)
-                .setCachePeriod(3600);
-    }
+    // 의도적으로 ResourceHandler를 등록하지 않는다.
+    // 따라서 /uploads/chat/** 요청은 정적 파일로 직접 제공되지 않는다.
 }

@@ -419,25 +419,30 @@ function renderMessage(message) {
     const bubble = document.createElement("div");
     bubble.className = "message-bubble";
 
+
     if (message.messageType === "IMAGE" && message.imageUrl) {
-        // 사진 메시지는 img 요소로 표시한다.
+        // 사진 메시지를 표시할 img 요소를 만든다.
         const image = document.createElement("img");
 
-        // 서버가 반환한 사진 경로를 사용한다.
-        image.src = message.imageUrl;
         image.alt = "채팅 사진";
         image.className = "chat-image";
         image.loading = "lazy";
 
-        // 사진 로딩 실패 시 사용자에게 안내한다.
-        image.addEventListener("error", () => {
-            image.alt = "사진을 불러오지 못했습니다.";
-            image.classList.add("image-load-error");
-        });
+        // 사진은 인증된 API를 통해 가져온다.
+        const roomId = currentRoom?.roomId;
 
-        // 사진을 클릭하면 원본 크기로 새 탭에서 연다.
+        if (roomId) {
+            loadProtectedChatImage(image, roomId, message.imageUrl);
+        } else {
+            image.alt = "채팅방 정보를 확인할 수 없습니다.";
+            image.classList.add("image-load-error");
+        }
+
+        // 사진을 클릭하면 새 탭 대신 원본 이미지가 있는 Blob URL을 연다.
         image.addEventListener("click", () => {
-            window.open(image.src, "_blank", "noopener,noreferrer");
+            if (image.src.startsWith("blob:")) {
+                window.open(image.src, "_blank", "noopener,noreferrer");
+            }
         });
 
         bubble.appendChild(image);
@@ -454,6 +459,7 @@ function renderMessage(message) {
         bubble.textContent = message.content || "";
     }
 
+
     // 메시지 시간을 표시한다.
     const time = document.createElement("div");
     time.className = "message-time";
@@ -466,6 +472,70 @@ function renderMessage(message) {
     // 가장 최근 메시지로 스크롤한다.
     scrollToLatestMessage();
 }
+
+
+/**
+ * 인증된 사진 조회 API를 호출해 사진을 가져온다.
+ * 브라우저 img 요소에는 JWT 헤더를 직접 설정할 수 없으므로
+ * fetch로 가져온 Blob을 이미지 URL로 변환한다.
+ */
+async function loadProtectedChatImage(image, roomId, imageUrl) {
+    try {
+        const token = getToken();
+
+        // 로그인 토큰이 없으면 사진을 요청하지 않는다.
+        if (!token) {
+            throw new Error("로그인이 필요합니다.");
+        }
+
+        // 기존 저장 URL에서 파일명만 추출한다.
+        const filename = imageUrl.split("/").pop();
+
+        if (!filename || filename.includes("..")) {
+            throw new Error("올바르지 않은 사진 경로입니다.");
+        }
+
+        // 채팅방 참여자만 접근할 수 있는 사진 조회 API를 호출한다.
+        const response = await fetch(
+            `/api/chat/rooms/${roomId}/images/${encodeURIComponent(filename)}`,
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                cache: "no-store"
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`사진 조회 실패 (HTTP ${response.status})`);
+        }
+
+        // 서버에서 받은 사진 데이터를 브라우저 이미지 URL로 변환한다.
+        const blob = await response.blob();
+
+        if (!blob.type.startsWith("image/")) {
+            throw new Error("서버 응답이 올바른 이미지가 아닙니다.");
+        }
+
+        const objectUrl = URL.createObjectURL(blob);
+
+        // 이미지가 더 이상 필요하지 않을 때 메모리 URL을 해제한다.
+        image.addEventListener("load", () => {
+            // 이미지가 화면에서 제거될 때 정리할 수 있도록 저장한다.
+            image.dataset.objectUrl = objectUrl;
+        }, { once: true });
+
+        image.src = objectUrl;
+    } catch (error) {
+        console.error("채팅 사진 조회 오류:", error);
+
+        image.alt = "사진을 불러오지 못했습니다.";
+        image.classList.add("image-load-error");
+        image.title = error.message;
+    }
+}
+
 
 
 // 메시지 시간 표시

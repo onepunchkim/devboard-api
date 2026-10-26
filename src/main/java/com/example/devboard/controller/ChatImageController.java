@@ -29,6 +29,20 @@ public class ChatImageController {
         this.messagingTemplate = messagingTemplate;
     }
 
+    /**
+     * 인증된 사용자의 ID를 가져온다.
+     * JWT 필터가 Authentication details에 회원 ID를 넣는 구조를 전제로 한다.
+     */
+    private Long getAuthenticatedMemberId(Authentication authentication) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || !(authentication.getDetails() instanceof Long memberId)) {
+            throw new IllegalArgumentException("로그인이 필요합니다.");
+        }
+
+        return memberId;
+    }
+
     // 사진을 업로드하고 채팅 메시지로 저장한 뒤 상대방에게 전달한다.
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ChatMessageResponse> uploadImage(
@@ -37,12 +51,8 @@ public class ChatImageController {
             @RequestParam(required = false) String caption,
             Authentication authentication
     ) {
-        // JWT 인증 정보에서 로그인한 회원 ID를 가져온다.
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || !(authentication.getDetails() instanceof Long memberId)) {
-            throw new IllegalArgumentException("로그인이 필요합니다.");
-        }
+        // 로그인한 회원 ID를 확인한다.
+        Long memberId = getAuthenticatedMemberId(authentication);
 
         // 해당 회원이 채팅방 참여자인지 확인한다.
         chatService.validateRoomMember(roomId, memberId);
@@ -67,5 +77,35 @@ public class ChatImageController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    // 채팅방 참여자에게만 사진 파일을 반환한다.
+    @GetMapping("/{filename:.+}")
+    public ResponseEntity<byte[]> getImage(
+            @PathVariable Long roomId,
+            @PathVariable String filename,
+            Authentication authentication
+    ) {
+        // 로그인한 회원 ID를 확인한다.
+        Long memberId = getAuthenticatedMemberId(authentication);
+
+        // 해당 회원이 사진이 속한 채팅방의 참여자인지 확인한다.
+        chatService.validateRoomMember(roomId, memberId);
+
+        // 검증된 파일을 읽는다.
+        byte[] imageBytes = chatImageService.readImage(filename);
+
+        // 확장자에 맞는 이미지 Content-Type으로 반환한다.
+        MediaType contentType = MediaType.parseMediaType(
+                chatImageService.getImageContentType(filename)
+        );
+
+        return ResponseEntity.ok()
+                .contentType(contentType)
+                // 민감한 채팅 사진이 공유 캐시에 저장되지 않도록 한다.
+                .cacheControl(
+                        org.springframework.http.CacheControl.noStore()
+                )
+                .body(imageBytes);
     }
 }

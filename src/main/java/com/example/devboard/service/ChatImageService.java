@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -164,6 +165,57 @@ public class ChatImageService {
             case "png" -> detectedType.equals("png");
             case "webp" -> detectedType.equals("webp");
             default -> false;
+        };
+    }
+
+    /**
+     * 저장된 채팅 사진을 읽어 반환한다.
+     * 외부에서 전달한 파일명이 업로드 디렉터리 밖을 가리키지 않도록 검증한다.
+     */
+    public byte[] readImage(String filename) {
+        // 파일명이 없거나 허용된 형식이 아니면 거부한다.
+        if (filename == null
+                || !filename.matches(
+                "[a-fA-F0-9-]{36}\\.(jpg|jpeg|png|webp)"
+        )) {
+            throw new IllegalArgumentException("올바르지 않은 사진 파일명입니다.");
+        }
+
+        // 정규화된 경로를 만들고 업로드 디렉터리 내부인지 확인한다.
+        Path imagePath = uploadDirectory.resolve(filename).normalize();
+
+        if (!imagePath.startsWith(uploadDirectory)) {
+            throw new IllegalArgumentException("올바르지 않은 파일 경로입니다.");
+        }
+
+        try {
+            // 파일이 없으면 조회 실패로 처리한다.
+            if (!Files.isRegularFile(imagePath)) {
+                throw new IllegalArgumentException("사진 파일을 찾을 수 없습니다.");
+            }
+
+            // 사진의 바이너리 데이터를 반환한다.
+            return Files.readAllBytes(imagePath);
+
+        } catch (IOException e) {
+            throw new IllegalStateException("사진 파일을 읽을 수 없습니다.", e);
+        }
+    }
+
+    /**
+     * 파일 확장자를 기준으로 응답 Content-Type을 결정한다.
+     */
+    public String getImageContentType(String filename) {
+        String extension = filename.substring(filename.lastIndexOf('.') + 1)
+                .toLowerCase(Locale.ROOT);
+
+        return switch (extension) {
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "png" -> "image/png";
+            case "webp" -> "image/webp";
+            default -> throw new IllegalArgumentException(
+                    "지원하지 않는 사진 형식입니다."
+            );
         };
     }
 }
