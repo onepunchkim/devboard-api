@@ -20,8 +20,15 @@
 </head>
 <body class="auth-page">
 
+<!-- 상단 헤더 -->
 <header class="header">
-    <a class="logo" href="/">DevBoard</a>
+    <!-- 메인 페이지와 동일한 DevBoard 로고 -->
+    <a class="logo" href="/">
+        <span class="logo-icon">D</span>
+        <span>DevBoard</span>
+    </a>
+
+    <!-- 회원가입 페이지로 이동 -->
     <nav>
         <a href="/signup.html">회원가입</a>
     </nav>
@@ -35,6 +42,7 @@
             계정에 로그인하고 게시글을 작성해 보세요.
         </p>
 
+        <!-- 로그인 폼 -->
         <form id="loginForm">
             <label for="email">이메일</label>
             <input
@@ -58,6 +66,7 @@
     </section>
 </main>
 
+<!-- 기존 로그인 JavaScript -->
 <script src="/js/api.js"></script>
 <script src="/js/auth.js"></script>
 </body>

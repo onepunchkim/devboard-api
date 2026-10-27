@@ -751,16 +751,18 @@ a {
         padding: 12px 20px;
     }
 
-    /* 로고 크기 조정 */
     .top-bar .logo {
-        gap: 8px;
-        font-size: 22px;
+        gap: 10px;
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -1px;
     }
 
     .top-bar .logo-icon {
-        width: 32px;
-        height: 32px;
-        font-size: 21px;
+        width: 36px;
+        height: 36px;
+        font-size: 23px;
+        font-weight: 800;
     }
 
     /* 채팅 레이아웃 너비 조정 */
@@ -792,18 +794,19 @@ a {
         padding: 10px 14px;
     }
 
-    /* 로고 크기 */
     .top-bar .logo {
-        gap: 7px;
-        font-size: 19px;
-        letter-spacing: -0.5px;
+        gap: 10px;
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -1px;
     }
 
     .top-bar .logo-icon {
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-        font-size: 19px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        font-size: 23px;
+        font-weight: 800;
     }
 
     /* 사용자 정보와 로그아웃 버튼 간격 */
