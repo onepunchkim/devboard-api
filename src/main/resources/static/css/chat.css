@@ -7,17 +7,20 @@
     box-sizing: border-box;
 }
 
-/* 페이지 기본 설정 */
-html,
-body {
-    min-height: 100%;
-    margin: 0;
-    font-family: Arial, "Malgun Gothic", sans-serif;
+ /* 페이지 기본 설정 */
+ html,
+ body {
+     min-height: 100%;
+     margin: 0;
 
-    /* 페이지 바깥 배경 */
-    background: #eaf3ff;
-    color: #e5e7eb;
-}
+     /* 메인 페이지와 글꼴 순서를 동일하게 맞춤 */
+     font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+
+     /* 페이지 바깥 배경 */
+     background: #eaf3ff;
+     color: #e5e7eb;
+ }
+
 
 /* 입력 요소의 폰트 통일 */
 button,
@@ -43,103 +46,27 @@ a {
 }
 
 
-/* ========================================
-   2. 상단 헤더
-   메인 페이지와 동일한 디자인
-   ======================================== */
+ /* 헤더 오른쪽의 로그인 정보 영역 */
+ .header-actions {
+     display: flex;
+     align-items: center;
+     justify-content: flex-end;
+     gap: 16px;
 
-/* 채팅 페이지 상단 배너 */
-.top-bar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
+     margin-left: auto;
+     flex-shrink: 0;
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 32px;
+     color: var(--text);
+ }
 
-    width: 100%;
-    min-height: 72px;
-    padding: 12px 32px;
-
-    /* 메인 페이지와 동일한 반투명 흰색 배경 */
-    background: rgba(255, 255, 255, 0.96);
-    border-bottom: 1px solid var(--border);
-
-    backdrop-filter: blur(14px);
-}
-
-/* DevBoard 로고 */
-.top-bar .logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-
-    flex-shrink: 0;
-
-    color: #1746ad;
-    font-size: 25px;
-    font-weight: 800;
-    letter-spacing: -1px;
-
-    text-decoration: none;
-}
-
-/* 방문 및 마우스 오버 상태에서도 로고 색상 유지 */
-.top-bar .logo:link,
-.top-bar .logo:visited,
-.top-bar .logo:hover,
-.top-bar .logo:active {
-    color: #1746ad;
-}
-
-/* 로고 아이콘 */
-.top-bar .logo-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-
-    border-radius: 10px;
-
-    /* 메인 페이지와 동일한 파란색 그라데이션 */
-    background: linear-gradient(
-            135deg,
-            #5590ff,
-            #2455e8
-    );
-
-    color: #ffffff;
-    font-size: 23px;
-    font-weight: 800;
-
-    box-shadow: 0 4px 10px rgba(49, 104, 245, 0.2);
-}
-
-/* 헤더 오른쪽 사용자 정보 영역 */
-.top-bar .header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 16px;
-
-    flex-shrink: 0;
-
-    color: var(--text);
-}
-
-/* 현재 로그인한 사용자 */
-.top-bar #current-user {
-    color: var(--text);
-    font-size: 14px;
-}
+ /* 로그인한 사용자 정보 */
+ #current-user {
+     color: var(--text);
+     font-size: 14px;
+ }
 
 /* 로그아웃 버튼 */
-.top-bar .secondary-button {
+.secondary-button {
     padding: 9px 14px;
 
     color: var(--text);
@@ -156,7 +83,7 @@ a {
 }
 
 /* 로그아웃 버튼 마우스 오버 */
-.top-bar .secondary-button:hover {
+.secondary-button:hover {
     color: var(--text);
     background: var(--primary-light);
     border-color: var(--primary);
@@ -736,173 +663,6 @@ a {
 .sidebar::-webkit-scrollbar-track,
 .message-list::-webkit-scrollbar-track {
     background: transparent;
-}
-
-
-/* ========================================
-   10. 반응형 디자인
-   ======================================== */
-
-/* 태블릿 및 작은 화면 */
-@media (max-width: 768px) {
-    /* 상단 헤더 간격 조정 */
-    .top-bar {
-        gap: 16px;
-        padding: 12px 20px;
-    }
-
-    .top-bar .logo {
-        gap: 10px;
-        font-size: 25px;
-        font-weight: 800;
-        letter-spacing: -1px;
-    }
-
-    .top-bar .logo-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 23px;
-        font-weight: 800;
-    }
-
-    /* 채팅 레이아웃 너비 조정 */
-    .chat-layout {
-        grid-template-columns: 250px minmax(0, 1fr);
-        width: calc(100% - 24px);
-        height: calc(100vh - 100px);
-        min-height: 480px;
-        margin: 12px auto;
-    }
-
-    /* 메시지 목록 여백 조정 */
-    .message-list {
-        padding: 18px;
-    }
-
-    /* 채팅 헤더 여백 조정 */
-    .chat-header {
-        padding: 16px;
-    }
-}
-
-/* 모바일 화면 */
-@media (max-width: 560px) {
-    /* 헤더 배치 */
-    .top-bar {
-        gap: 10px;
-        min-height: 64px;
-        padding: 10px 14px;
-    }
-
-    .top-bar .logo {
-        gap: 10px;
-        font-size: 25px;
-        font-weight: 800;
-        letter-spacing: -1px;
-    }
-
-    .top-bar .logo-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        font-size: 23px;
-        font-weight: 800;
-    }
-
-    /* 사용자 정보와 로그아웃 버튼 간격 */
-    .top-bar .header-actions {
-        gap: 8px;
-    }
-
-    .top-bar #current-user {
-        max-width: 100px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 12px;
-    }
-
-    .top-bar .secondary-button {
-        padding: 7px 9px;
-        font-size: 12px;
-    }
-
-    /* 채팅 레이아웃 */
-    .chat-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: minmax(150px, 35%) minmax(280px, 1fr);
-
-        width: calc(100% - 16px);
-        height: calc(100vh - 88px);
-        min-height: 450px;
-
-        margin: 8px auto;
-    }
-
-    /* 모바일에서는 사이드바를 위쪽에 배치 */
-    .sidebar {
-        padding: 14px;
-        border-right: none;
-        border-bottom: 1px solid #344156;
-    }
-
-    .sidebar h1 {
-        margin-top: 0;
-        font-size: 20px;
-    }
-
-    .create-room-form {
-        margin-bottom: 16px;
-        padding: 10px;
-    }
-
-    .room-heading {
-        margin: 16px 0 10px;
-    }
-
-    /* 채팅방 목록이 길어지면 내부 스크롤 사용 */
-    .room-list {
-        gap: 6px;
-    }
-
-    .room-list button,
-    .room-list a {
-        padding: 10px;
-    }
-
-    /* 메시지 영역 */
-    .chat-header {
-        min-height: 60px;
-        padding: 12px;
-    }
-
-    #partner-name {
-        font-size: 15px;
-    }
-
-    .message-list {
-        padding: 14px;
-        gap: 10px;
-    }
-
-    .message-row {
-        max-width: 90%;
-    }
-
-    /* 메시지 입력 영역 */
-    .message-form {
-        gap: 8px;
-        padding: 10px;
-    }
-
-    .message-form textarea {
-        font-size: 13px;
-    }
-
-    .message-form button {
-        min-width: 58px;
-        padding: 0 12px;
-    }
 }
 
 
