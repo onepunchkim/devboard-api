@@ -347,3 +347,180 @@
     font-size: 13px;
     font-weight: 700;
 }
+/* ========================================
+   게시글 작성 폼 가운데 정렬
+   ======================================== */
+
+/* 작성 페이지의 전체 영역 */
+.write-page {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    width: 100%;
+    padding-top: 40px;
+    padding-bottom: 60px;
+}
+
+/* 게시글 작성 카드 */
+.write-container {
+    display: block;
+
+    width: 100%;
+    max-width: 760px;
+    min-width: 0;
+
+    margin: 0 auto;
+    padding: 32px;
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+/* 작성 제목 영역 */
+.write-heading {
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+/* 작성 제목 */
+.write-container h1 {
+    margin: 0 0 10px;
+
+    color: var(--text);
+    font-size: 26px;
+    font-weight: 800;
+}
+
+/* 안내 문구 */
+.write-heading p {
+    margin: 0;
+
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* 게시글 작성 폼 */
+.write-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+/* 제목과 내용 입력 영역 */
+.write-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+
+    width: 100%;
+    min-width: 0;
+}
+
+/* 입력창 라벨 */
+.write-form label {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* 제목 입력창과 내용 입력창 */
+.write-form input,
+.write-form textarea {
+    display: block;
+    box-sizing: border-box;
+
+    width: 100%;
+    min-width: 0;
+    padding: 14px 16px;
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+
+    background: #fff;
+    color: var(--text);
+
+    font: inherit;
+    font-size: 14px;
+
+    transition:
+            border-color 0.2s,
+            box-shadow 0.2s;
+}
+
+/* 제목 입력창 */
+.write-form input {
+    min-height: 48px;
+}
+
+/* 내용 입력창 */
+.write-form textarea {
+    min-height: 280px;
+
+    line-height: 1.8;
+    resize: vertical;
+}
+
+/* 입력창 포커스 */
+.write-form input:focus,
+.write-form textarea:focus {
+    border-color: #a9c1ff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(49, 104, 245, 0.08);
+}
+
+/* 입력창 안내 문구 */
+.write-form input::placeholder,
+.write-form textarea::placeholder {
+    color: #9ba8bf;
+}
+
+/* 등록 및 취소 버튼 영역 */
+.write-form .form-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    margin-top: 8px;
+}
+
+/* 결과 메시지 */
+.write-form #formMessage {
+    margin: 0;
+
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-align: center;
+
+    overflow-wrap: anywhere;
+}
+
+/* 작은 화면 대응 */
+@media (max-width: 600px) {
+    .write-page {
+        padding-top: 20px;
+        padding-bottom: 32px;
+    }
+
+    .write-container {
+        padding: 24px 18px;
+    }
+
+    .write-container h1 {
+        font-size: 22px;
+    }
+
+    .write-form textarea {
+        min-height: 220px;
+    }
+}

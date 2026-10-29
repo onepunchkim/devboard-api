@@ -35,47 +35,66 @@
 </header>
 
 <!-- 게시글 작성 영역 -->
-<main class="container">
-    <section class="board">
-        <h1 id="formTitle">게시글 작성</h1>
-        <p>개발 지식과 경험을 공유해 보세요.</p>
+<main class="container write-page">
+
+    <!-- 가운데 정렬을 위한 작성 카드 -->
+    <section class="board write-container">
+
+        <!-- 제목과 안내 문구 -->
+        <div class="write-heading">
+            <h1 id="formTitle">게시글 작성</h1>
+            <p>개발 지식과 경험을 공유해 보세요.</p>
+        </div>
 
         <!-- 게시글 작성 및 수정 폼 -->
-        <form id="postForm">
-            <label for="title">제목</label>
-            <input
-                    id="title"
-                    type="text"
-                    maxlength="200"
-                    required
-                    placeholder="제목을 입력하세요"
-            >
+        <form id="postForm" class="write-form">
 
-            <label for="content">내용</label>
-            <textarea
-                    id="content"
-                    rows="12"
-                    required
-                    placeholder="내용을 입력하세요"
-            ></textarea>
+            <!-- 게시글 제목 -->
+            <div class="form-group">
+                <label for="title">제목</label>
+                <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        maxlength="200"
+                        required
+                        placeholder="제목을 입력하세요"
+                >
+            </div>
+
+            <!-- 게시글 내용 -->
+            <div class="form-group">
+                <label for="content">내용</label>
+                <textarea
+                        id="content"
+                        name="content"
+                        rows="12"
+                        required
+                        placeholder="내용을 입력하세요"
+                ></textarea>
+            </div>
 
             <!-- 등록 및 취소 버튼 -->
-            <div class="post-actions">
+            <div class="form-actions">
                 <button id="submitButton" class="button" type="submit">
                     등록하기
                 </button>
 
-                <a class="button secondary" href="/">취소</a>
+                <a class="button secondary" href="/">
+                    취소
+                </a>
             </div>
 
             <!-- 처리 결과 메시지 -->
             <p id="formMessage" role="status"></p>
+
         </form>
     </section>
 </main>
 
-<!-- 기존 JavaScript -->
+<!-- 기존 JavaScript 기능 유지 -->
 <script src="/js/api.js"></script>
 <script src="/js/write.js"></script>
+
 </body>
 </html>
