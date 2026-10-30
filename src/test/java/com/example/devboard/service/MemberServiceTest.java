@@ -4,6 +4,8 @@ import com.example.devboard.dto.request.MemberSignupRequest;
 import com.example.devboard.dto.request.MemberLoginRequest;
 import com.example.devboard.dto.request.MemberWithdrawalRequest;
 import com.example.devboard.entity.Member;
+import com.example.devboard.entity.Post;
+import com.example.devboard.entity.PostImage;
 import com.example.devboard.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -250,5 +252,75 @@ class MemberServiceTest {
         // 회원이 없으면 비밀번호 확인이나 삭제가 실행되지 않아야 함
         verify(passwordEncoder, never()).matches(anyString(), anyString());
         verify(memberRepository, never()).delete(any(Member.class));
+    }
+
+    @Test //게시글과 이미지가 있는 회원 탈퇴 테스트
+    void withdraw_withPostsAndImages_success() {
+        // given
+        Long memberId = 1L;
+        Long postId = 10L;
+
+        // 탈퇴할 회원 Mock
+        Member withdrawalMember = mock(Member.class);
+
+        when(withdrawalMember.getId()).thenReturn(memberId);
+        when(withdrawalMember.getPassword()).thenReturn(encodedPassword);
+
+        when(memberRepository.findByEmail(email))
+                .thenReturn(Optional.of(withdrawalMember));
+
+        when(passwordEncoder.matches(password, encodedPassword))
+                .thenReturn(true);
+
+        // 회원이 작성한 게시글 Mock
+        Post post = mock(Post.class);
+
+        when(post.getId()).thenReturn(postId);
+        when(post.getMember()).thenReturn(withdrawalMember);
+
+        when(postRepository.findAll()).thenReturn(List.of(post));
+
+        // 게시글 이미지 Mock
+        PostImage image = mock(PostImage.class);
+
+        when(image.getImagePath())
+                .thenReturn("uploads/post-images/test-image.jpg");
+
+        when(postImageRepository.findByPostIdOrderByIdAsc(postId))
+                .thenReturn(List.of(image));
+
+        MemberWithdrawalRequest request =
+                new MemberWithdrawalRequest(password);
+
+        // when
+        memberService.withdraw(email, request);
+
+        // then
+
+        // 회원이 작성한 댓글 삭제
+        verify(commentRepository).deleteByMemberId(memberId);
+
+        // 게시글에 작성된 댓글 삭제
+        verify(commentRepository).deleteByPostId(postId);
+
+        // 게시글의 좋아요 삭제
+        verify(postLikeRepository).deleteByPostId(postId);
+
+        // 이미지 파일 삭제
+        verify(imageStorageService).deleteImage(
+                "uploads/post-images/test-image.jpg"
+        );
+
+        // 이미지 DB 정보 삭제
+        verify(postImageRepository).deleteByPostId(postId);
+
+        // 게시글 삭제
+        verify(postRepository).deleteAll(List.of(post));
+
+        // 회원이 누른 좋아요 삭제
+        verify(postLikeRepository).deleteByMemberId(memberId);
+
+        // 회원 삭제
+        verify(memberRepository).delete(withdrawalMember);
     }
 }
