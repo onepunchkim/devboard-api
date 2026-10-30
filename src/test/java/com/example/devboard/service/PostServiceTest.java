@@ -3,6 +3,7 @@ package com.example.devboard.service;
 import com.example.devboard.dto.response.PostResponse;
 import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
+import com.example.devboard.entity.PostImage;
 import com.example.devboard.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -273,5 +275,55 @@ class PostServiceTest {
         verify(commentRepository, never()).deleteByPostId(1L);
         verify(postLikeRepository, never()).deleteByPostId(1L);
         verify(postRepository, never()).delete(any(Post.class));
+    }
+
+    @Test
+    void deletePost_withImages_success() {
+        // given: 게시글 작성자와 게시글 준비
+        when(member.getEmail()).thenReturn(email);
+
+        Post post = new Post(
+                "이미지가 포함된 게시글",
+                "게시글 내용",
+                member
+        );
+
+        when(postRepository.findById(1L))
+                .thenReturn(Optional.of(post));
+
+        // 게시글에 연결된 이미지 2개 생성
+        PostImage image1 = new PostImage(
+                "uploads/image1.jpg",
+                "사진1.jpg",
+                post
+        );
+
+        PostImage image2 = new PostImage(
+                "uploads/image2.png",
+                "사진2.png",
+                post
+        );
+
+        // 이미지 조회 시 두 이미지가 반환되도록 설정
+        when(postImageRepository.findByPostIdOrderByIdAsc(1L))
+                .thenReturn(List.of(image1, image2));
+
+        // when: 게시글 삭제 실행
+        postService.deletePost(1L, email);
+
+        // then: 실제 이미지 파일 삭제 서비스가 호출됐는지 확인
+        verify(imageStorageService, times(1))
+                .deleteImage("uploads/image1.jpg");
+
+        verify(imageStorageService, times(1))
+                .deleteImage("uploads/image2.png");
+
+        // 이미지 DB 정보 삭제 확인
+        verify(postImageRepository, times(1))
+                .deleteByPostId(1L);
+
+        // 게시글 삭제 확인
+        verify(postRepository, times(1))
+                .delete(post);
     }
 }
