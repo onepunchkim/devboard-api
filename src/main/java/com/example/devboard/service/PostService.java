@@ -3,9 +3,8 @@ package com.example.devboard.service;
 import com.example.devboard.dto.response.PostResponse;
 import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
-import com.example.devboard.repository.CommentRepository;
-import com.example.devboard.repository.MemberRepository;
-import com.example.devboard.repository.PostRepository;
+import com.example.devboard.entity.PostImage;
+import com.example.devboard.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 @Transactional(readOnly = true)
 public class PostService {
@@ -23,11 +24,22 @@ public class PostService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final CommentRepository commentRepository;
+    // 게시글 좋아요 기록을 관리하는 Repository
+    private final PostLikeRepository postLikeRepository;
+    // 게시글 이미지 정보를 관리하는 Repository
+    private final PostImageRepository postImageRepository;
+    // 실제 이미지 파일을 삭제하는 서비스
+    private final ImageStorageService imageStorageService;
 
-    public PostService(PostRepository postRepository, MemberRepository memberRepository, CommentRepository commentRepository) {
+    public PostService(PostRepository postRepository, MemberRepository memberRepository,
+                       CommentRepository commentRepository, PostLikeRepository postLikeRepository,
+                       PostImageRepository postImageRepository, ImageStorageService imageStorageService) {
         this.postRepository = postRepository;
         this.memberRepository = memberRepository;
         this.commentRepository = commentRepository;
+        this.postLikeRepository = postLikeRepository;
+        this.postImageRepository = postImageRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     //게시글 작성
@@ -130,15 +142,28 @@ public class PostService {
 
     }
 
-    //게시글 삭제(작성자만 가능)
+    // 게시글 삭제: 작성자만 삭제할 수 있음
     @Transactional
     public void deletePost(Long id, String email) {
-        Post post = findPost(id); //게시글 조회
-        validateOwner(post, email); //게시글 작성자 확인
-
-        commentRepository.deleteByPostId(id); //해당 게시글에 댓글을 먼저 삭제
-
-        postRepository.delete(post); //댓글 삭제 후 게시즐 삭제
+        // 1. 게시글 조회
+        Post post = findPost(id);
+        // 2. 게시글 작성자 확인
+        validateOwner(post, email);
+        // 3. 해당 게시글의 댓글 삭제
+        commentRepository.deleteByPostId(id);
+        // 4. 해당 게시글의 좋아요 기록 삭제
+        postLikeRepository.deleteByPostId(id);
+        // 5. 해당 게시글에 연결된 이미지 정보 조회
+        List<PostImage> images =
+                postImageRepository.findByPostIdOrderByIdAsc(id);
+        // 6. 실제 서버에 저장된 이미지 파일 삭제
+        for (PostImage image : images) {
+            imageStorageService.deleteImage(image.getImagePath());
+        }
+        // 7. 이미지 DB 정보 삭제
+        postImageRepository.deleteByPostId(id);
+        // 8. 모든 하위 데이터 삭제 후 게시글 삭제
+        postRepository.delete(post);
     }
 
     private Post findPost(Long id) {

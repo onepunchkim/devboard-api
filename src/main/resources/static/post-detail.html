@@ -56,6 +56,48 @@
             <!-- 게시글 본문 -->
             <div id="postContent" class="post-content"></div>
 
+            <!-- 게시글 이미지 갤러리 -->
+            <section
+                    id="postImageSection"
+                    class="post-image-section"
+                    aria-label="게시글 이미지"
+                    hidden
+            >
+                <h3>게시글 이미지</h3>
+
+                <!-- 이미지 업로드 영역 -->
+                <div id="imageUploadSection" class="image-upload-section" hidden>
+                    <label for="imageFiles">사진 선택</label>
+
+                    <!-- 여러 장의 이미지 선택 가능 -->
+                    <input
+                            type="file"
+                            id="imageFiles"
+                            accept="image/jpeg,image/png,image/webp"
+                            multiple
+                    />
+
+                    <!-- 선택한 이미지 업로드 버튼 -->
+                    <button type="button" id="uploadImagesButton">
+                        사진 등록
+                    </button>
+
+                    <!-- 업로드 상태 메시지 -->
+                    <p id="imageUploadMessage" role="status" aria-live="polite"></p>
+                </div>
+
+                <!-- 이미지 조회 상태 메시지 -->
+                <p
+                        id="postImageMessage"
+                        class="post-image-message"
+                        role="status"
+                        aria-live="polite"
+                ></p>
+
+                <!-- 등록된 이미지 목록 -->
+                <ul id="postImageList" class="post-image-list"></ul>
+            </section>
+
             <!-- 좋아요 영역 -->
             <div class="like-section">
 
