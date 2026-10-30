@@ -9,12 +9,15 @@ import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -325,5 +328,116 @@ class PostServiceTest {
         // 게시글 삭제 확인
         verify(postRepository, times(1))
                 .delete(post);
+    }
+
+    @Test
+    void findAll_withoutKeyword_success() {
+        // given: 검색어 없이 전체 게시글 조회
+        Pageable pageable = PageRequest.of(
+                0,
+                10,
+                Sort.by(
+                        new Sort.Order(Sort.Direction.DESC, "createdAt"),
+                        new Sort.Order(Sort.Direction.DESC, "id")
+                )
+        );
+
+        when(postRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // when: 게시글 목록 조회
+        Page<PostResponse> result =
+                postService.findAll(null, 0, 10);
+
+        // then: 정상적으로 조회됐는지 확인
+        assertNotNull(result);
+        assertEquals(0, result.getTotalElements());
+
+        verify(postRepository).findAll(any(Pageable.class));
+        verify(postRepository, never())
+                .findByTitleContainingOrContentContaining(
+                        anyString(), anyString(), any(Pageable.class)
+                );
+    }
+
+    @Test
+    void findAll_withKeyword_success() {
+        // given: 검색어가 포함된 게시글 조회
+        when(postRepository.findByTitleContainingOrContentContaining(
+                eq("스프링"),
+                eq("스프링"),
+                any(Pageable.class)
+        )).thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // when: 검색어로 게시글 조회
+        Page<PostResponse> result =
+                postService.findAll(" 스프링 ", 0, 10);
+
+        // then: 검색어 양쪽 공백이 제거되어 전달됐는지 확인
+        assertNotNull(result);
+        assertEquals(0, result.getTotalElements());
+
+        verify(postRepository).findByTitleContainingOrContentContaining(
+                eq("스프링"),
+                eq("스프링"),
+                any(Pageable.class)
+        );
+    }
+
+    @Test
+    void findAll_oldestSort_success() {
+        // given: 오래된 게시글부터 조회하도록 설정
+        when(postRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // when: 오래된 순으로 조회
+        postService.findAll(null, 0, 10, "oldest");
+
+        // then: 생성일과 ID가 오름차순인지 확인
+        ArgumentCaptor<Pageable> captor =
+                ArgumentCaptor.forClass(Pageable.class);
+
+        verify(postRepository).findAll(captor.capture());
+
+        Sort sort = captor.getValue().getSort();
+
+        assertEquals(
+                Sort.Direction.ASC,
+                sort.getOrderFor("createdAt").getDirection()
+        );
+
+        assertEquals(
+                Sort.Direction.ASC,
+                sort.getOrderFor("id").getDirection()
+        );
+    }
+
+    @Test
+    void findAll_invalidPage_throwsException() {
+        // given & when: 페이지 번호가 음수인 경우
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> postService.findAll(null, -1, 10)
+        );
+
+        // then: 400 Bad Request 확인
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+
+        // Repository는 호출되지 않아야 함
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void findAll_invalidSort_throwsException() {
+        // given & when: 지원하지 않는 정렬 조건
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> postService.findAll(null, 0, 10, "random")
+        );
+
+        // then: 400 Bad Request 확인
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+
+        verifyNoInteractions(postRepository);
     }
 }
