@@ -2,10 +2,9 @@ package com.example.devboard.service;
 
 import com.example.devboard.dto.request.MemberSignupRequest;
 import com.example.devboard.dto.request.MemberLoginRequest;
+import com.example.devboard.dto.request.MemberWithdrawalRequest;
 import com.example.devboard.entity.Member;
-import com.example.devboard.repository.CommentRepository;
-import com.example.devboard.repository.MemberRepository;
-import com.example.devboard.repository.PostRepository;
+import com.example.devboard.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,18 +25,23 @@ class MemberServiceTest {
 
     @Mock
     private MemberRepository memberRepository;
-
     @Mock
     private PasswordEncoder passwordEncoder;
-
     @Mock
     private JwtService jwtService;
-
     @Mock
     private PostRepository postRepository;
-
     @Mock
     private CommentRepository commentRepository;
+    // 좋아요 Repository Mock
+    @Mock
+    private PostLikeRepository postLikeRepository;
+    // 게시글 이미지 Repository Mock
+    @Mock
+    private PostImageRepository postImageRepository;
+    // 이미지 파일 관리 서비스 Mock
+    @Mock
+    private ImageStorageService imageStorageService;
 
     @InjectMocks
     private MemberService memberService;
@@ -53,7 +58,7 @@ class MemberServiceTest {
         member = new Member(email, encodedPassword, "테스트회원");
     }
 
-    @Test
+    @Test //회원 가입 및 비밀번호 암호화 테스트
     void signup_success() {
         // given
         MemberSignupRequest request =
@@ -75,7 +80,7 @@ class MemberServiceTest {
         verify(memberRepository).save(any(Member.class));
     }
 
-    @Test
+    @Test //중복 이메일 차단 테스트
     void signup_duplicateEmail_throwsException() {
         // given
         MemberSignupRequest request =
@@ -94,7 +99,7 @@ class MemberServiceTest {
         verify(memberRepository, never()).save(any(Member.class));
     }
 
-    @Test
+    @Test //로그인 및 JWT 발급 테스트
     void login_success() {
         // given
         MemberLoginRequest request =
@@ -118,7 +123,7 @@ class MemberServiceTest {
         verify(jwtService).generateToken(member.getId(), email);
     }
 
-    @Test
+    @Test //존재하지 않는 회원 로그인 차단 테스트
     void login_memberNotFound_throwsException() {
         // given
         MemberLoginRequest request =
@@ -136,7 +141,7 @@ class MemberServiceTest {
         verify(jwtService, never()).generateToken(anyLong(), anyString());
     }
 
-    @Test
+    @Test //잘못된 비밀번호 차단 테스트
     void login_wrongPassword_throwsException() {
         // given
         MemberLoginRequest request =
@@ -154,5 +159,96 @@ class MemberServiceTest {
 
         // 비밀번호가 틀리면 JWT를 발급하지 않아야 함
         verify(jwtService, never()).generateToken(anyLong(), anyString());
+    }
+
+    @Test //회원 탈퇴 테스트
+    void withdraw_success() {
+        // given
+        Long memberId = 1L;
+
+        // 회원 객체를 Mock으로 생성
+        Member withdrawalMember = mock(Member.class);
+
+        when(withdrawalMember.getId()).thenReturn(memberId);
+        when(withdrawalMember.getPassword()).thenReturn(encodedPassword);
+
+        // 회원 조회 및 비밀번호 검증 설정
+        when(memberRepository.findByEmail(email))
+                .thenReturn(Optional.of(withdrawalMember));
+
+        when(passwordEncoder.matches(password, encodedPassword))
+                .thenReturn(true);
+
+        // 회원이 작성한 게시글이 없는 상황
+        when(postRepository.findAll()).thenReturn(List.of());
+
+        MemberWithdrawalRequest request =
+                new MemberWithdrawalRequest(password);
+
+        // when
+        memberService.withdraw(email, request);
+
+        // then
+
+        // 회원이 작성한 댓글 삭제 확인
+        verify(commentRepository).deleteByMemberId(memberId);
+
+        // 회원이 누른 좋아요 삭제 확인
+        verify(postLikeRepository).deleteByMemberId(memberId);
+
+        // 게시글 삭제 확인
+        verify(postRepository).deleteAll(List.of());
+
+        // 회원 삭제 확인
+        verify(memberRepository).delete(withdrawalMember);
+    }
+
+    @Test //잘못된 비밀번호 테스트
+    void withdraw_wrongPassword_throwsException() {
+        // given
+        Member withdrawalMember = mock(Member.class);
+
+        when(withdrawalMember.getPassword()).thenReturn(encodedPassword);
+
+        when(memberRepository.findByEmail(email))
+                .thenReturn(Optional.of(withdrawalMember));
+
+        when(passwordEncoder.matches("wrongPassword", encodedPassword))
+                .thenReturn(false);
+
+        MemberWithdrawalRequest request =
+                new MemberWithdrawalRequest("wrongPassword");
+
+        // when & then
+        assertThrows(
+                BadCredentialsException.class,
+                () -> memberService.withdraw(email, request)
+        );
+
+        // 비밀번호가 틀리면 데이터 삭제가 실행되면 안 됨
+        verify(commentRepository, never()).deleteByMemberId(anyLong());
+        verify(postLikeRepository, never()).deleteByMemberId(anyLong());
+        verify(postRepository, never()).deleteAll(anyList());
+        verify(memberRepository, never()).delete(any(Member.class));
+    }
+
+    @Test //존재하지 않는 회원 테스트
+    void withdraw_memberNotFound_throwsException() {
+        // given
+        when(memberRepository.findByEmail(email))
+                .thenReturn(Optional.empty());
+
+        MemberWithdrawalRequest request =
+                new MemberWithdrawalRequest(password);
+
+        // when & then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> memberService.withdraw(email, request)
+        );
+
+        // 회원이 없으면 비밀번호 확인이나 삭제가 실행되지 않아야 함
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(memberRepository, never()).delete(any(Member.class));
     }
 }
