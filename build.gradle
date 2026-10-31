@@ -42,6 +42,8 @@ dependencies {
 	testCompileOnly 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testAnnotationProcessor 'org.projectlombok:lombok'
+	// Spring Security 인증 테스트 지원
+	testImplementation 'org.springframework.security:spring-security-test'
 }
 tasks.named('test') {
 	useJUnitPlatform()
