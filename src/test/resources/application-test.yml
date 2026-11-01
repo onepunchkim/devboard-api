@@ -1,0 +1,22 @@
+# 통합 테스트 전용 설정
+spring:
+  datasource:
+    # 개발 DB가 아닌 테스트 전용 DB 사용
+    url: jdbc:mysql://localhost:3306/devboard_test?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: test1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      # 테스트 DB에 필요한 테이블 자동 생성 및 갱신
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+# 테스트 환경의 로그 설정
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
