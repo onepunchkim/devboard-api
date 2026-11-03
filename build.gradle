@@ -44,6 +44,10 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok'
 	// Spring Security 인증 테스트 지원
 	testImplementation 'org.springframework.security:spring-security-test'
+	// JSON 직렬화 및 역직렬화
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	// Spring Boot 테스트 및 MockMvc 지원
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 tasks.named('test') {
 	useJUnitPlatform()

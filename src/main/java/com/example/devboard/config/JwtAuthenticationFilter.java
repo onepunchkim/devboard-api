@@ -1,4 +1,3 @@
-
 package com.example.devboard.config;
 
 import com.example.devboard.entity.Member;
