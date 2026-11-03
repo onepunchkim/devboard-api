@@ -20,3 +20,8 @@ spring:
 logging:
   level:
     org.hibernate.SQL: DEBUG
+
+# 테스트 환경의 파일 업로드 설정
+file:
+  # 개발용 이미지 폴더와 분리된 테스트 전용 경로
+  upload-dir: ./build/test-uploads/post-images
