@@ -2,6 +2,9 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.1.1'
 	id 'io.spring.dependency-management' version '1.1.7'
+
+	// 테스트 커버리지 측정 도구
+	id 'jacoco'
 }
 
 group = 'com.example'
@@ -51,4 +54,23 @@ dependencies {
 }
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy tasks.named('jacocoTestReport')
+}
+
+// JaCoCo 보고서 설정
+tasks.named('jacocoTestReport') {
+
+	// 테스트 실행 결과를 기반으로 보고서 생성
+	dependsOn tasks.named('test')
+
+	reports {
+		// HTML 보고서 활성화
+		html.required = true
+
+		// XML 보고서 활성화
+		xml.required = true
+
+		// CSV 보고서는 사용하지 않음
+		csv.required = false
+	}
 }
