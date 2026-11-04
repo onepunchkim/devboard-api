@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 import java.util.Map;
@@ -175,12 +177,22 @@ public class PostController {
                 ));
     }
 
-    // 게시글 생성 요청 데이터
+
+    // 게시글 생성 및 수정 요청 데이터
     public record PostRequest(
+
+            // 제목은 필수 입력이며 최대 200자까지 허용
+            @NotBlank(message = "제목은 필수입니다.")
+            @Size(max = 200, message = "제목은 200자 이하여야 합니다.")
             String title,
+
+            // 내용은 null, 빈 문자열, 공백만 있는 문자열을 허용하지 않음
+            @NotBlank(message = "내용은 필수입니다.")
             String content
+
     ) {
     }
+
 
     // 이미지 정보를 클라이언트에 전달하는 응답 DTO
     public record PostImageResponse(

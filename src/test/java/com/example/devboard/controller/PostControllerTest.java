@@ -290,4 +290,230 @@ class PostControllerTest {
                 "test@test.com"
         );
     }
+
+
+    // ==========================================
+    // 1. 검색 결과가 없는 경우
+    // ==========================================
+    @Test
+    void findAll_shouldReturnEmptyPage() throws Exception {
+
+        // given: 조회 결과가 없는 빈 페이지
+        Page<PostResponse> emptyPage = new PageImpl<>(
+                List.of(),
+                PageRequest.of(0, 10),
+                0
+        );
+
+        when(postService.findAll(null, 0, 10, "latest"))
+                .thenReturn(emptyPage);
+
+        // when & then: 빈 게시글 목록 반환
+        mockMvc.perform(get("/api/posts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0));
+
+        verify(postService).findAll(null, 0, 10, "latest");
+    }
+
+    // ==========================================
+    // 2. 이미지가 없는 게시글의 목록 조회
+    // ==========================================
+    @Test
+    void getPostImages_shouldReturnEmptyList() throws Exception {
+
+        // given: 이미지가 등록되지 않은 게시글
+        when(postImageService.findImagesByPostId(10L))
+                .thenReturn(List.of());
+
+        // when & then: 빈 배열 반환
+        mockMvc.perform(get("/api/posts/10/images"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        verify(postImageService).findImagesByPostId(10L);
+    }
+
+    // ==========================================
+    // 3. 좋아요가 없는 게시글의 좋아요 수 조회
+    // ==========================================
+    @Test
+    void getLikeCounts_shouldReturnZeroForPostsWithoutLikes()
+            throws Exception {
+
+        // given: 두 게시글 모두 좋아요가 없음
+        when(postLikeService.getLikeCounts(List.of(10L, 20L)))
+                .thenReturn(Map.of());
+
+        // when & then: 각 게시글의 좋아요 수가 0인지 확인
+        mockMvc.perform(get("/api/posts/counts")
+                        .param("postIds", "10", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$['10']").value(0))
+                .andExpect(jsonPath("$['20']").value(0));
+
+        verify(postLikeService).getLikeCounts(List.of(10L, 20L));
+    }
+
+    //=============================================================================================
+
+    // ==========================================
+    // 1. 게시글 작성: 제목이 비어 있는 경우
+    // ==========================================
+    @Test
+    void createPost_shouldRejectBlankTitle() throws Exception {
+
+        // 제목이 공백이면 요청 검증에서 차단되어야 한다.
+        mockMvc.perform(post("/api/posts")
+                        .principal(createAuthentication())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "   ",
+                                    "content": "테스트 내용"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        // 잘못된 요청은 서비스에 전달되지 않아야 한다.
+        org.mockito.Mockito.verifyNoInteractions(postService);
+    }
+
+    // ==========================================
+    // 2. 게시글 작성: 내용이 비어 있는 경우
+    // ==========================================
+    @Test
+    void createPost_shouldRejectBlankContent() throws Exception {
+
+        mockMvc.perform(post("/api/posts")
+                        .principal(createAuthentication())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "정상 제목",
+                                    "content": ""
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        org.mockito.Mockito.verifyNoInteractions(postService);
+    }
+
+    // ==========================================
+    // 3. 게시글 작성: 제목이 200자를 초과하는 경우
+    // ==========================================
+    @Test
+    void createPost_shouldRejectTooLongTitle() throws Exception {
+
+        // 201자 제목 생성
+        String longTitle = "A".repeat(201);
+
+        String requestBody = """
+                {
+                    "title": "%s",
+                    "content": "테스트 내용"
+                }
+                """.formatted(longTitle);
+
+        mockMvc.perform(post("/api/posts")
+                        .principal(createAuthentication())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        org.mockito.Mockito.verifyNoInteractions(postService);
+    }
+
+    // ==========================================
+    // 4. 게시글 수정: 제목이 없는 경우
+    // ==========================================
+    @Test
+    void updatePost_shouldRejectMissingTitle() throws Exception {
+
+        mockMvc.perform(put("/api/posts/1")
+                        .principal(createAuthentication())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "content": "수정할 내용"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        org.mockito.Mockito.verifyNoInteractions(postService);
+    }
+
+    // ==========================================
+    // 5. 게시글 작성: 잘못된 JSON 요청
+    // ==========================================
+    @Test
+    void createPost_shouldRejectInvalidJson() throws Exception {
+
+        // JSON 문법이 올바르지 않은 요청
+        mockMvc.perform(post("/api/posts")
+                        .principal(createAuthentication())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "잘못된 JSON",
+                                    "content":
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        org.mockito.Mockito.verifyNoInteractions(postService);
+    }
+
+    // ==========================================
+    // 6. 게시글 ID가 숫자가 아닌 경우
+    // ==========================================
+    @Test
+    void findById_shouldRejectInvalidId() throws Exception {
+
+        // given: Long으로 변환할 수 없는 게시글 ID
+        String invalidId = "abc";
+
+        // when & then: 잘못된 요청은 HTTP 400 반환
+        mockMvc.perform(get("/api/posts/{id}", invalidId))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message")
+                        .value("요청 파라미터의 형식이 올바르지 않습니다."))
+                .andExpect(jsonPath("$.timestamp").exists());
+
+        // 타입 변환에 실패했으므로 서비스는 호출되지 않아야 함
+        org.mockito.Mockito.verifyNoInteractions(postService);
+    }
+
+
+    // ==========================================
+    // 7. 좋아요 수 조회: 중복 게시글 ID 제거
+    // ==========================================
+    @Test
+    void getLikeCounts_shouldRemoveDuplicatePostIds()
+            throws Exception {
+
+        // 서비스가 반환하는 좋아요 수
+        when(postLikeService.getLikeCounts(
+                List.of(1L, 1L, 2L)
+        )).thenReturn(Map.of(
+                1L, 3L,
+                2L, 5L
+        ));
+
+        // 같은 게시글 ID를 중복 전달
+        mockMvc.perform(get("/api/posts/counts")
+                        .param("postIds", "1", "1", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$['1']").value(3))
+                .andExpect(jsonPath("$['2']").value(5));
+
+        // 현재 Controller는 중복된 입력 목록을 서비스에 전달한다.
+        verify(postLikeService).getLikeCounts(
+                List.of(1L, 1L, 2L)
+        );
+    }
+
 }

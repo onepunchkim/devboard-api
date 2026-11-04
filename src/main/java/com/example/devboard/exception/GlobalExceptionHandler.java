@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -76,6 +77,22 @@ public class GlobalExceptionHandler {
     ) {
         return createErrorResponse(HttpStatus.BAD_REQUEST, "요청 본문이 올바른 JSON 형식이 아닙니다.");
     }
+
+
+    // ==========================================
+    // URL 경로 변수 또는 요청 파라미터 타입 오류 처리
+    // ==========================================
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException exception
+    ) {
+        // 잘못된 요청값으로 발생한 타입 변환 오류이므로 HTTP 400 반환
+        return createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "요청 파라미터의 형식이 올바르지 않습니다."
+        );
+    }
+
 
     //그 외 예상하지 못한 서버 오류
     @ExceptionHandler(Exception.class)
