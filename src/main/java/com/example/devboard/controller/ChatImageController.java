@@ -10,6 +10,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/chat/rooms/{roomId}/images")
@@ -33,15 +34,32 @@ public class ChatImageController {
      * 인증된 사용자의 ID를 가져온다.
      * JWT 필터가 Authentication details에 회원 ID를 넣는 구조를 전제로 한다.
      */
+
+    // 인증된 사용자의 회원 ID 조회
     private Long getAuthenticatedMemberId(Authentication authentication) {
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || !(authentication.getDetails() instanceof Long memberId)) {
-            throw new IllegalArgumentException("로그인이 필요합니다.");
+
+        // 인증 정보가 없거나 인증되지 않은 경우
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "로그인이 필요합니다."
+            );
+        }
+
+        // JWT 인증 정보에 저장된 회원 ID 확인
+        Object details = authentication.getDetails();
+
+        // 회원 ID가 없거나 Long 타입이 아닌 경우
+        if (!(details instanceof Long memberId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "유효하지 않은 인증 정보입니다."
+            );
         }
 
         return memberId;
     }
+
 
     // 사진을 업로드하고 채팅 메시지로 저장한 뒤 상대방에게 전달한다.
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
