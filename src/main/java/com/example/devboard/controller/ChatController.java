@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -74,12 +75,18 @@ public class ChatController {
         return ResponseEntity.ok(rooms);
     }
 
-    // 인증 정보에서 로그인한 회원 ID를 안전하게 가져온다.
+    // 인증 정보에서 현재 로그인한 회원 ID 조회
     private Long getCurrentMemberId(Authentication authentication) {
+
+        // 인증 정보가 없거나 인증되지 않은 경우
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalArgumentException("로그인이 필요합니다.");
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "로그인이 필요합니다."
+            );
         }
 
+        // 인증 정보에 저장된 회원 ID 확인
         Object details = authentication.getDetails();
 
         if (!(details instanceof Long memberId)) {
