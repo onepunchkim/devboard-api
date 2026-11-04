@@ -1,5 +1,4 @@
-
-package com.example.devboard;
+package com.example.devboard.service;
 
 import com.example.devboard.service.ImageStorageService;
 import org.junit.jupiter.api.BeforeEach;
