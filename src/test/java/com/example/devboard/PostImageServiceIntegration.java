@@ -332,4 +332,180 @@ class PostImageServiceIntegrationTest {
                         HttpStatus.NOT_FOUND
                 );
     }
+
+
+    // ==========================================
+    // 추가 테스트 1: 이미지 목록이 null인 경우
+    // ==========================================
+
+    @Test
+    void uploadImages_shouldRejectNullFileList() {
+        Member member = createTestMember("image8@test.com");
+        Post post = createTestPost(member);
+
+        // 업로드 목록이 null이면 400 반환
+        assertThatThrownBy(() ->
+                postImageService.uploadImages(
+                        post.getId(),
+                        null,
+                        member.getEmail()
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue(
+                        "status",
+                        HttpStatus.BAD_REQUEST
+                );
+    }
+
+    // ==========================================
+    // 추가 테스트 2: 이미지 목록이 비어 있는 경우
+    // ==========================================
+
+    @Test
+    void uploadImages_shouldRejectEmptyFileList() {
+        Member member = createTestMember("image9@test.com");
+        Post post = createTestPost(member);
+
+        // 빈 목록은 업로드할 이미지가 없는 요청
+        assertThatThrownBy(() ->
+                postImageService.uploadImages(
+                        post.getId(),
+                        List.of(),
+                        member.getEmail()
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue(
+                        "status",
+                        HttpStatus.BAD_REQUEST
+                );
+    }
+
+    // ==========================================
+    // 추가 테스트 3: 존재하지 않는 게시글에 업로드
+    // ==========================================
+
+    @Test
+    void uploadImages_shouldRejectMissingPost() throws IOException {
+        Member member = createTestMember("image10@test.com");
+
+        // 존재하지 않는 게시글 ID
+        Long invalidPostId = -1L;
+
+        assertThatThrownBy(() ->
+                postImageService.uploadImages(
+                        invalidPostId,
+                        List.of(createTestImage("missing.png")),
+                        member.getEmail()
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue(
+                        "status",
+                        HttpStatus.NOT_FOUND
+                );
+    }
+
+    // ==========================================
+    // 추가 테스트 4: null 파일이 포함된 경우
+    // ==========================================
+
+    @Test
+    void uploadImages_shouldRejectNullFile() throws IOException {
+        Member member = createTestMember("image11@test.com");
+        Post post = createTestPost(member);
+
+        // List.of()는 null을 허용하지 않으므로
+        // Arrays.asList()를 사용한다.
+        List<MultipartFile> files = java.util.Arrays.asList(
+                createTestImage("valid.png"),
+                null
+        );
+
+        assertThatThrownBy(() ->
+                postImageService.uploadImages(
+                        post.getId(),
+                        files,
+                        member.getEmail()
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue(
+                        "status",
+                        HttpStatus.BAD_REQUEST
+                );
+
+        // 이미지 정보가 저장되지 않았는지 확인
+        assertThat(postImageRepository.countByPostId(post.getId()))
+                .isZero();
+    }
+
+    // ==========================================
+    // 추가 테스트 5: 존재하지 않는 이미지 삭제
+    // ==========================================
+
+    @Test
+    void deleteImage_shouldRejectMissingImage() {
+        Member member = createTestMember("image12@test.com");
+        Post post = createTestPost(member);
+
+        Long invalidImageId = -1L;
+
+        assertThatThrownBy(() ->
+                postImageService.deleteImage(
+                        post.getId(),
+                        invalidImageId,
+                        member.getEmail()
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue(
+                        "status",
+                        HttpStatus.NOT_FOUND
+                );
+    }
+
+    // ==========================================
+    // 추가 테스트 6: 다른 게시글의 이미지 삭제 차단
+    // ==========================================
+
+    @Test
+    void deleteImage_shouldRejectImageFromAnotherPost()
+            throws IOException {
+
+        Member member = createTestMember("image13@test.com");
+
+        // 동일 회원이 작성한 서로 다른 게시글
+        Post firstPost = createTestPost(member);
+        Post secondPost = createTestPost(member);
+
+        // 첫 번째 게시글에 이미지 업로드
+        List<PostImage> images = postImageService.uploadImages(
+                firstPost.getId(),
+                List.of(createTestImage("first-post.png")),
+                member.getEmail()
+        );
+
+        Long imageId = images.get(0).getId();
+
+        // 두 번째 게시글의 이미지인 것처럼 삭제 요청
+        assertThatThrownBy(() ->
+                postImageService.deleteImage(
+                        secondPost.getId(),
+                        imageId,
+                        member.getEmail()
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue(
+                        "status",
+                        HttpStatus.BAD_REQUEST
+                );
+
+        // 원래 게시글의 이미지 정보가 유지되어야 한다.
+        assertThat(postImageRepository.existsById(imageId))
+                .isTrue();
+    }
+
 }
