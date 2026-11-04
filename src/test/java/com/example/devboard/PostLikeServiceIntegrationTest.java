@@ -199,4 +199,176 @@ class PostLikeServiceIntegrationTest {
                 postLikeService.hasLikedByEmail(member.getEmail(), post.getId())
         ).isFalse();
     }
+
+
+    // ==========================================
+    // 1. 존재하지 않는 회원의 좋아요 등록
+    // ==========================================
+    @Test
+    void likePost_shouldRejectMissingMember() {
+        Member writer = createTestMember("like10@test.com");
+        Post post = createTestPost(writer, "회원 없음 테스트");
+
+        assertThatThrownBy(() ->
+                postLikeService.likePost(-1L, post.getId())
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("회원을 찾을 수 없습니다.");
+    }
+
+    // ==========================================
+    // 2. 존재하지 않는 게시글의 좋아요 등록
+    // ==========================================
+    @Test
+    void likePost_shouldRejectMissingPost() {
+        Member member = createTestMember("like11@test.com");
+
+        assertThatThrownBy(() ->
+                postLikeService.likePost(member.getId(), -1L)
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("게시글을 찾을 수 없습니다.");
+    }
+
+    // ==========================================
+    // 3. 존재하지 않는 회원의 좋아요 취소
+    // ==========================================
+    @Test
+    void unlikePost_shouldRejectMissingMember() {
+        Member writer = createTestMember("like12@test.com");
+        Post post = createTestPost(writer, "좋아요 취소 회원 없음");
+
+        assertThatThrownBy(() ->
+                postLikeService.unlikePost(-1L, post.getId())
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("회원을 찾을 수 없습니다.");
+    }
+
+    // ==========================================
+    // 4. 존재하지 않는 게시글의 좋아요 취소
+    // ==========================================
+    @Test
+    void unlikePost_shouldRejectMissingPost() {
+        Member member = createTestMember("like13@test.com");
+
+        assertThatThrownBy(() ->
+                postLikeService.unlikePost(member.getId(), -1L)
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("게시글을 찾을 수 없습니다.");
+    }
+
+    // ==========================================
+    // 5. 좋아요 기록이 없을 때 취소
+    // ==========================================
+    @Test
+    void unlikePost_shouldRejectMissingLike() {
+        Member member = createTestMember("like14@test.com");
+        Post post = createTestPost(member, "좋아요 기록 없음");
+
+        assertThatThrownBy(() ->
+                postLikeService.unlikePost(
+                        member.getId(),
+                        post.getId()
+                )
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("좋아요 기록이 없습니다.");
+    }
+
+    // ==========================================
+    // 6. 존재하지 않는 게시글의 좋아요 수 조회
+    // ==========================================
+    @Test
+    void getLikeCount_shouldRejectMissingPost() {
+        assertThatThrownBy(() ->
+                postLikeService.getLikeCount(-1L)
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("게시글을 찾을 수 없습니다.");
+    }
+
+    // ==========================================
+    // 7. 좋아요 수 일괄 조회: null 및 빈 목록
+    // ==========================================
+    @Test
+    void getLikeCounts_shouldReturnEmptyMapForEmptyInput() {
+        // null 입력
+        assertThat(postLikeService.getLikeCounts(null))
+                .isEmpty();
+
+        // 빈 목록 입력
+        assertThat(postLikeService.getLikeCounts(List.of()))
+                .isEmpty();
+    }
+
+    // ==========================================
+    // 8. 존재하지 않는 게시글의 좋아요 여부 조회
+    // ==========================================
+    @Test
+    void hasLiked_shouldRejectMissingPost() {
+        Member member = createTestMember("like15@test.com");
+
+        assertThatThrownBy(() ->
+                postLikeService.hasLiked(member.getId(), -1L)
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("게시글을 찾을 수 없습니다.");
+    }
+
+    // ==========================================
+    // 9. 존재하지 않는 이메일로 좋아요 등록
+    // ==========================================
+    @Test
+    void likePostByEmail_shouldRejectMissingMember() {
+        Member writer = createTestMember("like16@test.com");
+        Post post = createTestPost(writer, "이메일 등록 실패");
+
+        assertThatThrownBy(() ->
+                postLikeService.likePostByEmail(
+                        "missing@test.com",
+                        post.getId()
+                )
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("회원을 찾을 수 없습니다.");
+    }
+
+    // ==========================================
+    // 10. 존재하지 않는 이메일로 좋아요 취소
+    // ==========================================
+    @Test
+    void unlikePostByEmail_shouldRejectMissingMember() {
+        Member writer = createTestMember("like17@test.com");
+        Post post = createTestPost(writer, "이메일 취소 실패");
+
+        assertThatThrownBy(() ->
+                postLikeService.unlikePostByEmail(
+                        "missing@test.com",
+                        post.getId()
+                )
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("회원을 찾을 수 없습니다.");
+    }
+
+    // ==========================================
+    // 11. 존재하지 않는 이메일로 좋아요 여부 조회
+    // ==========================================
+    @Test
+    void hasLikedByEmail_shouldRejectMissingMember() {
+        Member writer = createTestMember("like18@test.com");
+        Post post = createTestPost(writer, "이메일 조회 실패");
+
+        assertThatThrownBy(() ->
+                postLikeService.hasLikedByEmail(
+                        "missing@test.com",
+                        post.getId()
+                )
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("회원을 찾을 수 없습니다.");
+    }
+
 }
