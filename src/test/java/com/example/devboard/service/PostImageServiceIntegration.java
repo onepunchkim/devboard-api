@@ -1,4 +1,4 @@
-package com.example.devboard;
+package com.example.devboard.service;
 
 import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
@@ -6,7 +6,6 @@ import com.example.devboard.entity.PostImage;
 import com.example.devboard.repository.MemberRepository;
 import com.example.devboard.repository.PostImageRepository;
 import com.example.devboard.repository.PostRepository;
-import com.example.devboard.service.PostImageService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

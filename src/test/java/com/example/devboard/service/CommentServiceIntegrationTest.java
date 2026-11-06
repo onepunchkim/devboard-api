@@ -1,4 +1,4 @@
-package com.example.devboard;
+package com.example.devboard.service;
 
 import com.example.devboard.dto.request.CommentCreateRequest;
 import com.example.devboard.dto.response.CommentResponse;
@@ -8,7 +8,6 @@ import com.example.devboard.entity.Post;
 import com.example.devboard.repository.CommentRepository;
 import com.example.devboard.repository.MemberRepository;
 import com.example.devboard.repository.PostRepository;
-import com.example.devboard.service.CommentService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

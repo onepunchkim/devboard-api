@@ -1,5 +1,5 @@
 
-package com.example.devboard;
+package com.example.devboard.service;
 
 import com.example.devboard.entity.ChatMessage;
 import com.example.devboard.entity.ChatRoom;
@@ -8,7 +8,6 @@ import com.example.devboard.repository.ChatMessageRepository;
 import com.example.devboard.repository.ChatRoomMemberRepository;
 import com.example.devboard.repository.ChatRoomRepository;
 import com.example.devboard.repository.MemberRepository;
-import com.example.devboard.service.ChatService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
