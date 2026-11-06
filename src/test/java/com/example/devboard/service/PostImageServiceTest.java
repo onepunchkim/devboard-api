@@ -1,4 +1,3 @@
-
 package com.example.devboard.service;
 
 import com.example.devboard.entity.Member;
@@ -6,8 +5,6 @@ import com.example.devboard.entity.Post;
 import com.example.devboard.entity.PostImage;
 import com.example.devboard.repository.PostImageRepository;
 import com.example.devboard.repository.PostRepository;
-import com.example.devboard.service.ImageStorageService;
-import com.example.devboard.service.PostImageService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
