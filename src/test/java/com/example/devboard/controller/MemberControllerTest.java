@@ -2,6 +2,7 @@ package com.example.devboard.controller;
 
 import com.example.devboard.dto.request.MemberLoginRequest;
 import com.example.devboard.dto.request.MemberSignupRequest;
+import com.example.devboard.dto.request.MemberWithdrawalRequest;
 import com.example.devboard.dto.response.MemberLoginResponse;
 import com.example.devboard.entity.Member;
 import com.example.devboard.service.MemberService;
@@ -11,11 +12,15 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -156,4 +161,39 @@ class MemberControllerTest {
         // 입력값 검증에 실패하면 서비스가 호출되지 않아야 한다.
         verifyNoInteractions(memberService);
     }
+
+
+    // 회원 탈퇴 성공 시 HTTP 204 반환 및 서비스 호출 검증
+    @Test
+    void withdraw_success() throws Exception {
+
+        // given: 로그인한 회원의 인증 정보 생성
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        "test@test.com",
+                        null,
+                        List.of()
+                );
+
+        // when & then: 회원 탈퇴 요청
+        mockMvc.perform(delete("/api/members/me")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "password": "password123"
+                                }
+                                """))
+                // 회원 탈퇴 성공 시 204 No Content
+                .andExpect(status().isNoContent())
+                // 응답 본문이 없어야 함
+                .andExpect(content().string(""));
+
+        // 인증된 회원의 이메일과 탈퇴 요청이 서비스로 전달되는지 검증
+        verify(memberService).withdraw(
+                eq("test@test.com"),
+                any(MemberWithdrawalRequest.class)
+        );
+    }
+
 }
