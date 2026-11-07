@@ -261,4 +261,132 @@ class CommentServiceIntegrationTest {
         assertThat(commentRepository.existsById(commentId))
                 .isTrue();
     }
+
+
+    @Test
+    void createComment_shouldRejectMissingPost() {
+        // given: 회원은 존재하지만 게시글은 존재하지 않는다.
+        Member member = createTestMember("missingpost@test.com");
+        Long missingPostId = Long.MAX_VALUE;
+
+        // when & then: 존재하지 않는 게시글에 댓글 작성 시 404
+        assertThatThrownBy(() ->
+                commentService.createComment(
+                        missingPostId,
+                        member.getEmail(),
+                        createCommentRequest("댓글 작성 시도")
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(exception -> {
+                    ResponseStatusException responseException =
+                            (ResponseStatusException) exception;
+
+                    assertThat(responseException.getStatusCode())
+                            .isEqualTo(HttpStatus.NOT_FOUND);
+                });
+    }
+
+    @Test
+    void createComment_shouldRejectMissingMember() {
+        // given: 게시글은 존재하지만 댓글 작성 회원은 존재하지 않는다.
+        Member writer = createTestMember("postwriter@test.com");
+        Post post = createTestPost(writer);
+
+        // when & then: 존재하지 않는 회원의 댓글 작성 시 404
+        assertThatThrownBy(() ->
+                commentService.createComment(
+                        post.getId(),
+                        "missingmember@test.com",
+                        createCommentRequest("댓글 작성 시도")
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(exception -> {
+                    ResponseStatusException responseException =
+                            (ResponseStatusException) exception;
+
+                    assertThat(responseException.getStatusCode())
+                            .isEqualTo(HttpStatus.NOT_FOUND);
+                });
+    }
+
+    @Test
+    void findComments_shouldRejectMissingPost() {
+        // given: 존재하지 않는 게시글 ID
+        Long missingPostId = Long.MAX_VALUE;
+
+        // when & then: 댓글 목록 조회 시 404
+        assertThatThrownBy(() ->
+                commentService.findComments(missingPostId)
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(exception -> {
+                    ResponseStatusException responseException =
+                            (ResponseStatusException) exception;
+
+                    assertThat(responseException.getStatusCode())
+                            .isEqualTo(HttpStatus.NOT_FOUND);
+                });
+    }
+
+    @Test
+    void findComments_shouldReturnEmptyList() {
+        // given: 댓글이 없는 게시글 생성
+        Member member = createTestMember("emptycomments@test.com");
+        Post post = createTestPost(member);
+
+        // when: 댓글 목록 조회
+        List<CommentResponse> comments =
+                commentService.findComments(post.getId());
+
+        // then: 정상적으로 빈 목록 반환
+        assertThat(comments).isEmpty();
+    }
+
+    @Test
+    void updateComment_shouldRejectMissingComment() {
+        // given: 존재하지 않는 댓글 ID
+        Long missingCommentId = Long.MAX_VALUE;
+
+        // when & then: 댓글 수정 시 404
+        assertThatThrownBy(() ->
+                commentService.updateComment(
+                        missingCommentId,
+                        "test@test.com",
+                        createCommentRequest("수정 시도")
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(exception -> {
+                    ResponseStatusException responseException =
+                            (ResponseStatusException) exception;
+
+                    assertThat(responseException.getStatusCode())
+                            .isEqualTo(HttpStatus.NOT_FOUND);
+                });
+    }
+
+    @Test
+    void deleteComment_shouldRejectMissingComment() {
+        // given: 존재하지 않는 댓글 ID
+        Long missingCommentId = Long.MAX_VALUE;
+
+        // when & then: 댓글 삭제 시 404
+        assertThatThrownBy(() ->
+                commentService.deleteComment(
+                        missingCommentId,
+                        "test@test.com"
+                )
+        )
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(exception -> {
+                    ResponseStatusException responseException =
+                            (ResponseStatusException) exception;
+
+                    assertThat(responseException.getStatusCode())
+                            .isEqualTo(HttpStatus.NOT_FOUND);
+                });
+    }
+
 }
