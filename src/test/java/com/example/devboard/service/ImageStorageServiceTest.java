@@ -409,4 +409,61 @@ class ImageStorageServiceTest {
                 )
         );
     }
+
+    @Test
+    void storeImage_shouldReturn500WhenDirectoryCreationFails() throws IOException {
+        // given: 업로드 디렉터리로 사용할 경로에 일반 파일 생성
+        Path invalidUploadPath = tempDir.resolve("not-a-directory");
+
+        Files.writeString(invalidUploadPath, "일반 파일");
+
+        // 일반 파일을 디렉터리처럼 사용하도록 서비스 생성
+        ImageStorageService service =
+                new ImageStorageService(invalidUploadPath.toString());
+
+        MockMultipartFile file =
+                createFile("test.png", createPngBytes());
+
+        // when: 디렉터리 생성 실패로 이미지 저장 오류 발생
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.storeImage(file)
+        );
+
+        // then: 서버 내부 오류(500) 확인
+        assertEquals(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                exception.getStatusCode()
+        );
+    }
+
+    @Test
+    void deleteImage_shouldReturn500WhenTargetIsNotEmptyDirectory()
+            throws IOException {
+
+        // given: 이미지 파일명 위치에 디렉터리 생성
+        Path targetDirectory = tempDir.resolve("image.png");
+
+        Files.createDirectory(targetDirectory);
+
+        // 디렉터리 안에 파일을 생성해 비어 있지 않도록 설정
+        Files.writeString(
+                targetDirectory.resolve("child.txt"),
+                "테스트 데이터"
+        );
+
+        // when: 비어 있지 않은 디렉터리를 파일처럼 삭제 시도
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> imageStorageService.deleteImage(
+                        "uploads/post-images/image.png"
+                )
+        );
+
+        // then: 파일 삭제 실패 시 서버 내부 오류(500) 확인
+        assertEquals(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                exception.getStatusCode()
+        );
+    }
 }
