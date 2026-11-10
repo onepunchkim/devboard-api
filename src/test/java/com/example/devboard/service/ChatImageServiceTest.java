@@ -1,4 +1,3 @@
-
 package com.example.devboard.service;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -362,6 +361,94 @@ class ChatImageServiceTest {
 
         assertEquals(
                 "사진 파일을 확인할 수 없습니다.",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void upload_shouldThrowExceptionWhenStorageDirectoryCannotBeCreated()
+            throws IOException {
+
+        // given: 업로드 디렉터리로 사용할 위치에 일반 파일 생성
+        Path blockingFile = tempDir.resolve("blocked");
+        Files.writeString(blockingFile, "일반 파일");
+
+        // 일반 파일은 디렉터리로 사용할 수 없음
+        ChatImageService service = new ChatImageService(
+                blockingFile.toString(),
+                1024
+        );
+
+        MockMultipartFile file = createFile(
+                "test.jpg",
+                JPEG_HEADER
+        );
+
+        // when: 이미지 저장 시도
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> service.upload(file)
+        );
+
+        // then: 저장 실패 예외 메시지 확인
+        assertEquals(
+                "사진 저장에 실패했습니다.",
+                exception.getMessage()
+        );
+
+        // 원인이 IOException인지 확인
+        assertInstanceOf(IOException.class, exception.getCause());
+    }
+
+    @Test
+    void uploadRejectsCorruptedPngSignature() {
+
+        // given: 정상 PNG 시그니처를 복사
+        byte[] corruptedHeader = PNG_HEADER.clone();
+
+        // PNG 시그니처의 마지막 바이트 변경
+        corruptedHeader[7] = 0x01;
+
+        MockMultipartFile file = createFile(
+                "corrupted.png",
+                corruptedHeader
+        );
+
+        // when & then: 손상된 PNG 시그니처 거부
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> chatImageService.upload(file)
+        );
+
+        assertEquals(
+                "파일 확장자와 실제 이미지 형식이 일치하지 않습니다.",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void uploadRejectsCorruptedWebpSignature() {
+
+        // given: WEBP 시그니처와 거의 같지만 마지막 바이트가 잘못된 파일
+        byte[] corruptedHeader = WEBP_HEADER.clone();
+
+        // 정상 WEBP 시그니처의 마지막 문자 P를 다른 값으로 변경
+        corruptedHeader[11] = 0x00;
+
+        MockMultipartFile file = createFile(
+                "corrupted.webp",
+                corruptedHeader
+        );
+
+        // when: 손상된 이미지 업로드 시도
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> chatImageService.upload(file)
+        );
+
+        // then: 실제 파일 형식과 확장자가 일치하지 않아 거부
+        assertEquals(
+                "파일 확장자와 실제 이미지 형식이 일치하지 않습니다.",
                 exception.getMessage()
         );
     }
