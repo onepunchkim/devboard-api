@@ -175,23 +175,6 @@ public class PostService {
 
     }
 
-    // 회원 조회
-    private Member findMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED,
-                        "인증된 회원을 찾을 수 없습니다."
-                ));
-    }
-
-    //게시글 조회 공통 logic
-    private Post findPostById(Long id) {
-        return postRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "게시글을 찾을 수 없습니다. ID: " + id));
-    }
-
     //작성자 권한 확인
     private void validateOwner(Post post, String email) {
         if (post.getMember() == null || !post.getMember().getEmail().equals(email)) {

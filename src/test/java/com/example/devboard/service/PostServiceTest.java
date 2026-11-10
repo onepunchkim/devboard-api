@@ -440,4 +440,151 @@ class PostServiceTest {
 
         verifyNoInteractions(postRepository);
     }
+
+
+    @Test
+    void findById_success() {
+        // given: 조회할 게시글 준비
+        when(member.getId()).thenReturn(1L);
+        when(member.getNickname()).thenReturn("테스트회원");
+
+        Post post = new Post("조회 제목", "조회 내용", member);
+
+        when(postRepository.findById(1L))
+                .thenReturn(Optional.of(post));
+
+        // when: 게시글 상세 조회
+        PostResponse response = postService.findById(1L);
+
+        // then: 게시글 정보 확인
+        assertEquals("조회 제목", response.title());
+        assertEquals("조회 내용", response.content());
+        assertEquals(1L, response.memberId());
+        assertEquals("테스트회원", response.nickname());
+
+        verify(postRepository).findById(1L);
+    }
+
+    @Test
+    void findById_postNotFound() {
+        // given: 존재하지 않는 게시글
+        when(postRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        // when & then: 404 예외 확인
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> postService.findById(999L)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    }
+
+    @Test
+    void findAll_blankKeyword_shouldFindAll() {
+        // given: 검색어가 공백인 경우
+        when(postRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // when: 목록 조회
+        postService.findAll("   ", 0, 10);
+
+        // then: 검색이 아닌 전체 조회 실행
+        verify(postRepository).findAll(any(Pageable.class));
+        verify(postRepository, never())
+                .findByTitleContainingOrContentContaining(
+                        anyString(), anyString(), any(Pageable.class)
+                );
+    }
+
+    @Test
+    void findAll_nullSort_shouldUseLatest() {
+        // given: 정렬 조건이 null인 경우
+        when(postRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // when: 목록 조회
+        postService.findAll(null, 0, 10, null);
+
+        // then: 기본 최신순 정렬 확인
+        ArgumentCaptor<Pageable> captor =
+                ArgumentCaptor.forClass(Pageable.class);
+
+        verify(postRepository).findAll(captor.capture());
+
+        Sort sort = captor.getValue().getSort();
+
+        assertEquals(Sort.Direction.DESC,
+                sort.getOrderFor("createdAt").getDirection());
+        assertEquals(Sort.Direction.DESC,
+                sort.getOrderFor("id").getDirection());
+    }
+
+    @Test
+    void findAll_blankSort_shouldUseLatest() {
+        // given: 정렬 조건이 공백인 경우
+        when(postRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // when: 목록 조회
+        postService.findAll(null, 0, 10, "   ");
+
+        // then: 기본 최신순 정렬 확인
+        ArgumentCaptor<Pageable> captor =
+                ArgumentCaptor.forClass(Pageable.class);
+
+        verify(postRepository).findAll(captor.capture());
+
+        assertEquals(Sort.Direction.DESC,
+                captor.getValue().getSort()
+                        .getOrderFor("createdAt").getDirection());
+    }
+
+    @Test
+    void findAll_invalidSizeZero_shouldThrowException() {
+        // given & when: 페이지 크기가 0인 경우
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> postService.findAll(null, 0, 0)
+        );
+
+        // then: 잘못된 요청이므로 400 반환
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void findAll_invalidSizeOver100_shouldThrowException() {
+        // given & when: 페이지 크기가 100을 초과한 경우
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> postService.findAll(null, 0, 101)
+        );
+
+        // then: 잘못된 요청이므로 400 반환
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void findAll_withPosts_shouldConvertToPostResponse() {
+        // given: 조회 결과에 게시글이 포함된 경우
+        when(member.getId()).thenReturn(1L);
+        when(member.getNickname()).thenReturn("테스트회원");
+
+        Post post = new Post("목록 제목", "목록 내용", member);
+
+        when(postRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(post)));
+
+        // when: 게시글 목록 조회
+        Page<PostResponse> result = postService.findAll(null, 0, 10);
+
+        // then: Entity가 PostResponse로 변환되는지 확인
+        assertEquals(1, result.getTotalElements());
+        assertEquals("목록 제목", result.getContent().get(0).title());
+        assertEquals("목록 내용", result.getContent().get(0).content());
+        assertEquals(1L, result.getContent().get(0).memberId());
+    }
+
 }
