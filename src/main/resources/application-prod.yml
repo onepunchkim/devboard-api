@@ -1,0 +1,22 @@
+# AWS 운영용 설정
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      # 운영 DB의 테이블 구조를 검증
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+
+# 운영 환경에서는 상세 SQL 로그 비활성화
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: OFF
