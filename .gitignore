@@ -35,3 +35,14 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# 환경변수 및 비밀 설정 파일
+.env
+.env.*
+!.env.example
+
+# 로컬 업로드 이미지
+/uploads/
+
+# Gradle 빌드 결과
+/build/
