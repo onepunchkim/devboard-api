@@ -1,131 +1,178 @@
 package com.example.devboard.exception;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    //공통 오류 응답 생성
-    private ResponseEntity<Map<String, Object>> createErrorResponse(
-            HttpStatus status,
-            String message
-    ) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", status.value());
-        body.put("message", message);
-        body.put("timestamp", LocalDateTime.now());
+    // 예외 상세 내용은 서버 로그에 기록
+    private static final Logger log =
+            LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-        return ResponseEntity.status(status).body(body);
+    // 1. 새로운 비즈니스 예외 처리
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(
+            BusinessException exception
+    ) {
+        ErrorCode errorCode = exception.getErrorCode();
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.from(errorCode));
     }
 
-    //서비스에서 발생시킨 HTTP 상태 예외 처리
+    // 2. 기존 ResponseStatusException 처리
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, Object>> handleResponseStatus(
+    public ResponseEntity<ErrorResponse> handleResponseStatus(
             ResponseStatusException exception
     ) {
-        HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
+        int status = exception.getStatusCode().value();
 
-        return createErrorResponse(status, exception.getReason() != null ? exception.getReason() : "요청을 처리 할 수 없습니다.");
+        return ResponseEntity
+                .status(exception.getStatusCode())
+                .body(ErrorResponse.of(
+                        status,
+                        "HTTP_" + status,
+                        exception.getReason() != null
+                                ? exception.getReason()
+                                : "요청을 처리할 수 없습니다."
+                ));
     }
-    //회원 또는 게시글을 찾지 못한 경우
+
+    // 3. 회원 또는 게시글을 찾지 못한 경우
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleEntityNotFound(
+    public ResponseEntity<ErrorResponse> handleEntityNotFound(
             EntityNotFoundException exception
     ) {
-        return createErrorResponse(HttpStatus.NOT_FOUND,
-                exception.getMessage() != null ? exception.getMessage() : "요청한 데이터를 찾을 수 없습니다.");
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(
+                        404,
+                        "ENTITY_NOT_FOUND",
+                        exception.getMessage() != null
+                                ? exception.getMessage()
+                                : "요청한 데이터를 찾을 수 없습니다."
+                ));
     }
 
-    //@Valid 검증 실패
+    // 4. @Valid 입력값 검증 실패
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(
+    public ResponseEntity<ErrorResponse> handleValidation(
             MethodArgumentNotValidException exception
     ) {
         Map<String, String> errors = new LinkedHashMap<>();
 
-        for (FieldError error : exception.getBindingResult().getFieldErrors()) {
-            errors.putIfAbsent(error.getField(), error.getDefaultMessage());
+        // 검증에 실패한 필드와 메시지 수집
+        for (FieldError error :
+                exception.getBindingResult().getFieldErrors()) {
+            errors.putIfAbsent(
+                    error.getField(),
+                    error.getDefaultMessage()
+            );
         }
 
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("message", "입력값 검증에 실패했습니다.");
-        body.put("errors", errors);
-        body.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return ResponseEntity
+                .badRequest()
+                .body(ErrorResponse.validation(errors));
     }
 
-    //JSON 형식이 잘못된 경우
+    // 5. 파라미터 제약 조건 위반
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(
+            ConstraintViolationException exception
+    ) {
+        return ResponseEntity
+                .badRequest()
+                .body(ErrorResponse.from(ErrorCode.INVALID_INPUT));
+    }
+
+    // 6. 잘못된 JSON 요청
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidation(
+    public ResponseEntity<ErrorResponse> handleInvalidJson(
             HttpMessageNotReadableException exception
     ) {
-        return createErrorResponse(HttpStatus.BAD_REQUEST, "요청 본문이 올바른 JSON 형식이 아닙니다.");
+        return ResponseEntity
+                .badRequest()
+                .body(ErrorResponse.of(
+                        400,
+                        "INVALID_JSON",
+                        "요청 본문이 올바른 JSON 형식이 아닙니다."
+                ));
     }
 
-
-    // ==========================================
-    // URL 경로 변수 또는 요청 파라미터 타입 오류 처리
-    // ==========================================
+    // 7. URL 경로 변수 또는 파라미터 타입 오류
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, Object>> handleTypeMismatch(
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
             MethodArgumentTypeMismatchException exception
     ) {
-        // 잘못된 요청값으로 발생한 타입 변환 오류이므로 HTTP 400 반환
-        return createErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "요청 파라미터의 형식이 올바르지 않습니다."
-        );
+        return ResponseEntity
+                .badRequest()
+                .body(ErrorResponse.of(
+                        400,
+                        "TYPE_MISMATCH",
+                        "요청 파라미터의 형식이 올바르지 않습니다."
+                ));
     }
 
-
-    //그 외 예상하지 못한 서버 오류
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleUnexpected(Exception exception) {
-        //서버 로그에 상세 원인 기록
-        exception.printStackTrace();
-
-        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부에 오류가 발생했습니다.");
-    }
-
+    // 8. 로그인 인증 정보 오류
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, Object>> handleBadCredentials(
-            BadCredentialsException exception) {
-        return createErrorResponse(
-                HttpStatus.UNAUTHORIZED,
-                "비밀번호가 올바르지 않습니다."
-        );
+    public ResponseEntity<ErrorResponse> handleBadCredentials(
+            BadCredentialsException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(
+                        401,
+                        ErrorCode.INVALID_CREDENTIALS.getCode(),
+                        "비밀번호가 올바르지 않습니다."
+                ));
     }
 
-
-    // 이미 처리된 요청 상태와 충돌하는 경우 처리
-    // 예: 같은 회원이 같은 게시글에 좋아요를 중복 등록한 경우
+    // 9. 중복 요청 또는 상태 충돌
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalState(
+    public ResponseEntity<ErrorResponse> handleIllegalState(
             IllegalStateException exception
     ) {
-        // 중복 요청은 409 Conflict 상태 코드로 반환
-        return createErrorResponse(
-                HttpStatus.CONFLICT,
-                exception.getMessage() != null
-                        ? exception.getMessage()
-                        : "현재 상태에서는 요청을 처리할 수 없습니다."
-        );
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(
+                        409,
+                        "CONFLICT",
+                        exception.getMessage() != null
+                                ? exception.getMessage()
+                                : "현재 상태에서는 요청을 처리할 수 없습니다."
+                ));
     }
 
+    // 10. 예상하지 못한 서버 오류
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(
+            Exception exception
+    ) {
+        // 상세 스택 트레이스는 서버 로그에만 기록
+        log.error("처리되지 않은 서버 오류가 발생했습니다.", exception);
+
+        // 클라이언트에는 내부 구현 정보를 노출하지 않음
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.from(
+                        ErrorCode.INTERNAL_SERVER_ERROR
+                ));
+    }
 }
