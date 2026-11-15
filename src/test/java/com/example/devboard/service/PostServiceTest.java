@@ -5,7 +5,8 @@ import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
 import com.example.devboard.entity.PostImage;
 import com.example.devboard.repository.*;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.devboard.exception.BusinessException;
+import com.example.devboard.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,8 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -97,14 +96,17 @@ class PostServiceTest {
                 .thenReturn(Optional.empty());
 
         // when & then: 회원을 찾지 못하면 예외가 발생해야 함
-        assertThrows(
-                EntityNotFoundException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.createPost(
                         "테스트 제목",
                         "테스트 내용",
                         email
                 )
         );
+
+        // 회원을 찾지 못한 경우 공통 오류 코드 확인
+        assertEquals(ErrorCode.MEMBER_NOT_FOUND, exception.getErrorCode());
 
         // 회원 조회 이후 게시글 저장은 실행되지 않아야 함
         verify(memberRepository, times(1)).findByEmail(email);
@@ -153,9 +155,9 @@ class PostServiceTest {
         when(postRepository.findById(1L))
                 .thenReturn(Optional.of(post));
 
-        // when & then: 다른 회원이 수정하면 403 예외 발생
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        // when & then: 다른 회원이 수정하면 권한 예외 발생
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.updatePost(
                         1L,
                         "수정 제목",
@@ -164,10 +166,7 @@ class PostServiceTest {
                 )
         );
 
-        assertEquals(
-                HttpStatus.FORBIDDEN,
-                exception.getStatusCode()
-        );
+        assertEquals(ErrorCode.POST_ACCESS_DENIED, exception.getErrorCode());
     }
 
     @Test
@@ -176,9 +175,9 @@ class PostServiceTest {
         when(postRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        // when & then: 게시글을 찾지 못하면 404 예외 발생
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        // when & then: 게시글을 찾지 못하면 공통 예외 발생
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.updatePost(
                         1L,
                         "수정 제목",
@@ -187,10 +186,7 @@ class PostServiceTest {
                 )
         );
 
-        assertEquals(
-                HttpStatus.NOT_FOUND,
-                exception.getStatusCode()
-        );
+        assertEquals(ErrorCode.POST_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test
@@ -240,16 +236,13 @@ class PostServiceTest {
         when(postRepository.findById(1L))
                 .thenReturn(Optional.of(post));
 
-        // when & then: 다른 회원이 삭제하면 403 예외 발생
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        // when & then: 다른 회원이 삭제하면 권한 예외 발생
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.deletePost(1L, "other@test.com")
         );
 
-        assertEquals(
-                HttpStatus.FORBIDDEN,
-                exception.getStatusCode()
-        );
+        assertEquals(ErrorCode.POST_ACCESS_DENIED, exception.getErrorCode());
 
         // 권한 검증에 실패했으므로 삭제 작업은 실행되지 않아야 함
         verify(commentRepository, never()).deleteByPostId(1L);
@@ -263,16 +256,13 @@ class PostServiceTest {
         when(postRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        // when & then: 게시글이 없으면 404 예외 발생
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        // when & then: 게시글이 없으면 공통 예외 발생
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.deletePost(1L, email)
         );
 
-        assertEquals(
-                HttpStatus.NOT_FOUND,
-                exception.getStatusCode()
-        );
+        assertEquals(ErrorCode.POST_NOT_FOUND, exception.getErrorCode());
 
         // 게시글이 없으므로 삭제 작업은 실행되지 않아야 함
         verify(commentRepository, never()).deleteByPostId(1L);
@@ -415,13 +405,13 @@ class PostServiceTest {
     @Test
     void findAll_invalidPage_throwsException() {
         // given & when: 페이지 번호가 음수인 경우
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.findAll(null, -1, 10)
         );
 
-        // then: 400 Bad Request 확인
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        // then: 잘못된 요청 오류 코드 확인
+        assertEquals(ErrorCode.INVALID_PAGE, exception.getErrorCode());
 
         // Repository는 호출되지 않아야 함
         verifyNoInteractions(postRepository);
@@ -430,13 +420,13 @@ class PostServiceTest {
     @Test
     void findAll_invalidSort_throwsException() {
         // given & when: 지원하지 않는 정렬 조건
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.findAll(null, 0, 10, "random")
         );
 
-        // then: 400 Bad Request 확인
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        // then: 잘못된 요청 오류 코드 확인
+        assertEquals(ErrorCode.INVALID_SORT, exception.getErrorCode());
 
         verifyNoInteractions(postRepository);
     }
@@ -471,13 +461,13 @@ class PostServiceTest {
         when(postRepository.findById(999L))
                 .thenReturn(Optional.empty());
 
-        // when & then: 404 예외 확인
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        // when & then: 게시글 없음 오류 코드 확인
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.findById(999L)
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals(ErrorCode.POST_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test
@@ -543,26 +533,26 @@ class PostServiceTest {
     @Test
     void findAll_invalidSizeZero_shouldThrowException() {
         // given & when: 페이지 크기가 0인 경우
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.findAll(null, 0, 0)
         );
 
-        // then: 잘못된 요청이므로 400 반환
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        // then: 페이지 크기 오류 코드 확인
+        assertEquals(ErrorCode.INVALID_PAGE, exception.getErrorCode());
         verifyNoInteractions(postRepository);
     }
 
     @Test
     void findAll_invalidSizeOver100_shouldThrowException() {
         // given & when: 페이지 크기가 100을 초과한 경우
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> postService.findAll(null, 0, 101)
         );
 
-        // then: 잘못된 요청이므로 400 반환
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        // then: 페이지 크기 오류 코드 확인
+        assertEquals(ErrorCode.INVALID_PAGE, exception.getErrorCode());
         verifyNoInteractions(postRepository);
     }
 
