@@ -101,7 +101,11 @@ public class SecurityConfig {
                                 "/write.html",
                                 "/css/**",
                                 "/js/**",
-                                "/favicon.ico"
+                                "/favicon.ico",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**"
                         ).permitAll()
 
                         //회원 가입 및 로그인 API는 인증 없이 접근 가능

@@ -26,6 +26,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
+	// Swagger UI 및 OpenAPI 3 문서 자동 생성
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0'
+
 	// WebSocket 및 STOMP 기반 실시간 채팅 기능
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
