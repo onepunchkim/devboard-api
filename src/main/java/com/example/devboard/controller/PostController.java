@@ -8,7 +8,6 @@ import com.example.devboard.service.PostService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -32,10 +31,9 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/posts")
-
 @Tag(
         name = "게시글 API",
-        description = "게시글 CRUD, 검색, 이미지 및 좋아요 수 조회 API"
+        description = "게시글 CRUD, 검색, 이미지 관리 및 좋아요 수 조회 API"
 )
 public class PostController {
 
@@ -43,7 +41,10 @@ public class PostController {
     private final PostLikeService postLikeService;
     private final PostImageService postImageService;
 
-    // 필요한 서비스들을 생성자로 주입
+    // =====================================================
+    // 생성자 주입
+    // =====================================================
+
     public PostController(
             PostService postService,
             PostLikeService postLikeService,
@@ -55,12 +56,12 @@ public class PostController {
     }
 
     // =====================================================
-    // 게시글 생성
+    // 1. 게시글 작성
     // =====================================================
 
     @Operation(
             summary = "게시글 작성",
-            description = "로그인한 사용자가 새로운 게시글을 작성합니다.",
+            description = "JWT 인증된 사용자가 새로운 게시글을 작성합니다.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
@@ -70,20 +71,26 @@ public class PostController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "제목 또는 내용 입력값 오류"
+                    description = "제목 또는 내용 입력값 검증 실패 (INVALID_INPUT)"
             ),
             @ApiResponse(
                     responseCode = "401",
                     description = "JWT 인증 필요"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "작성 회원을 찾을 수 없음 (MEMBER_NOT_FOUND)"
             )
     })
     @PostMapping
     public PostResponse createPost(
             @Valid @RequestBody PostRequest request,
+
             @Parameter(hidden = true)
             Authentication authentication
     ) {
-        // 제목, 내용, 로그인한 사용자 이메일을 전달
+
+        // 게시글 제목, 내용, 로그인한 사용자 이메일 전달
         return postService.createPost(
                 request.title(),
                 request.content(),
@@ -92,59 +99,93 @@ public class PostController {
     }
 
     // =====================================================
-    // 게시글 이미지 업로드
+    // 2. 게시글 이미지 업로드
     // =====================================================
 
     @Operation(
             summary = "게시글 이미지 업로드",
-            description = "게시글 작성자가 여러 이미지를 업로드합니다.",
+            description = "게시글 작성자가 이미지 파일을 업로드합니다. " +
+                    "게시글당 최대 5장까지 등록할 수 있습니다.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "이미지 업로드 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 이미지 요청"),
-            @ApiResponse(responseCode = "401", description = "JWT 인증 필요"),
-            @ApiResponse(responseCode = "403", description = "작성자 권한 없음"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "이미지 업로드 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "업로드 파일 없음, 빈 파일 포함, " +
+                            "이미지 5장 제한 초과 (HTTP_400) 또는 " +
+                            "게시글 ID 형식 오류 (TYPE_MISMATCH)"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT 인증 필요"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "게시글 작성자 권한 없음 (HTTP_403)"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "게시글을 찾을 수 없음 (HTTP_404)"
+            )
     })
     @PostMapping(
             value = "/{id}/images",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public List<PostImageResponse> uploadImages(
-            @Parameter(description = "게시글 ID", example = "1")
+
+            @Parameter(
+                    description = "이미지를 등록할 게시글 ID",
+                    example = "1"
+            )
             @PathVariable Long id,
 
-            @Parameter(description = "업로드할 이미지 파일 목록")
+            @Parameter(
+                    description = "업로드할 이미지 파일 목록"
+            )
             @RequestParam("files") List<MultipartFile> files,
 
             @Parameter(hidden = true)
             Authentication authentication
     ) {
-        // 로그인한 사용자의 작성자 권한 확인 후 이미지 업로드
+
+        // 게시글 존재 여부, 작성자 권한, 이미지 개수 확인 후 업로드
         List<PostImage> images = postImageService.uploadImages(
                 id,
                 files,
                 authentication.getName()
         );
 
-        // 이미지 엔티티를 응답 DTO로 변환
+        // 저장된 이미지 정보를 응답 DTO로 변환
         return images.stream()
                 .map(PostImageResponse::from)
                 .toList();
     }
 
     // =====================================================
-    // 게시글 목록 조회
+    // 3. 게시글 목록 조회 및 검색
     // =====================================================
 
     @Operation(
             summary = "게시글 목록 조회",
-            description = "검색어, 페이지 번호, 페이지 크기, 정렬 조건을 이용해 게시글 목록을 조회합니다."
+            description = "검색어, 페이지 번호, 페이지 크기, " +
+                    "정렬 조건을 이용해 게시글 목록을 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 페이지 또는 정렬 조건")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "게시글 목록 조회 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 페이지 번호 또는 크기 (INVALID_PAGE), " +
+                            "지원하지 않는 정렬 조건 (INVALID_SORT), " +
+                            "파라미터 형식 오류 (TYPE_MISMATCH)"
+            )
     })
     @GetMapping
     public Page<PostResponse> findAll(
@@ -180,12 +221,18 @@ public class PostController {
             @RequestParam(defaultValue = "latest")
             String sort
     ) {
-        // 검색 조건을 서비스 계층으로 전달
-        return postService.findAll(keyword, page, size, sort);
+
+        // 검색 조건을 서비스 계층에 전달
+        return postService.findAll(
+                keyword,
+                page,
+                size,
+                sort
+        );
     }
 
     // =====================================================
-    // 게시글 상세 조회
+    // 4. 게시글 상세 조회
     // =====================================================
 
     @Operation(
@@ -193,19 +240,35 @@ public class PostController {
             description = "게시글 ID를 이용해 상세 정보를 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "게시글 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "게시글 상세 조회 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "게시글 ID 형식 오류 (TYPE_MISMATCH)"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "게시글을 찾을 수 없음 (POST_NOT_FOUND)"
+            )
     })
     @GetMapping("/{id}")
     public PostResponse findById(
-            @Parameter(description = "조회할 게시글 ID", example = "1")
+
+            @Parameter(
+                    description = "조회할 게시글 ID",
+                    example = "1"
+            )
             @PathVariable Long id
     ) {
+
+        // 게시글이 존재하지 않으면 POST_NOT_FOUND 예외 발생
         return postService.findById(id);
     }
 
     // =====================================================
-    // 게시글 수정
+    // 5. 게시글 수정
     // =====================================================
 
     @Operation(
@@ -214,15 +277,35 @@ public class PostController {
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "게시글 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 오류"),
-            @ApiResponse(responseCode = "401", description = "JWT 인증 필요"),
-            @ApiResponse(responseCode = "403", description = "작성자 권한 없음"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "게시글 수정 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "입력값 검증 실패 (INVALID_INPUT) 또는 " +
+                            "게시글 ID 형식 오류 (TYPE_MISMATCH)"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT 인증 필요"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "작성자 권한 없음 (POST_ACCESS_DENIED)"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "게시글을 찾을 수 없음 (POST_NOT_FOUND)"
+            )
     })
     @PutMapping("/{id}")
     public PostResponse updatePost(
-            @Parameter(description = "수정할 게시글 ID", example = "1")
+
+            @Parameter(
+                    description = "수정할 게시글 ID",
+                    example = "1"
+            )
             @PathVariable Long id,
 
             @Valid @RequestBody PostRequest request,
@@ -230,7 +313,8 @@ public class PostController {
             @Parameter(hidden = true)
             Authentication authentication
     ) {
-        // 게시글 ID, 수정 데이터, 로그인 사용자 이메일 전달
+
+        // 작성자 권한 확인 후 게시글 제목과 내용 수정
         return postService.updatePost(
                 id,
                 request.title(),
@@ -240,30 +324,52 @@ public class PostController {
     }
 
     // =====================================================
-    // 게시글 삭제
+    // 6. 게시글 삭제
     // =====================================================
 
     @Operation(
             summary = "게시글 삭제",
-            description = "게시글 작성자만 게시글을 삭제할 수 있습니다.",
+            description = "게시글 작성자만 게시글을 삭제할 수 있습니다. " +
+                    "삭제 시 댓글, 좋아요 기록 및 이미지도 정리합니다.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "게시글 삭제 성공"),
-            @ApiResponse(responseCode = "401", description = "JWT 인증 필요"),
-            @ApiResponse(responseCode = "403", description = "작성자 권한 없음"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "게시글 삭제 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "게시글 ID 형식 오류 (TYPE_MISMATCH)"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT 인증 필요"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "작성자 권한 없음 (POST_ACCESS_DENIED)"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "게시글을 찾을 수 없음 (POST_NOT_FOUND)"
+            )
     })
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePost(
-            @Parameter(description = "삭제할 게시글 ID", example = "1")
+
+            @Parameter(
+                    description = "삭제할 게시글 ID",
+                    example = "1"
+            )
             @PathVariable Long id,
 
             @Parameter(hidden = true)
             Authentication authentication
     ) {
-        // 작성자 권한 확인 후 게시글 삭제
+
+        // 작성자 권한 확인 후 게시글 및 관련 데이터 삭제
         postService.deletePost(
                 id,
                 authentication.getName()
@@ -271,23 +377,39 @@ public class PostController {
     }
 
     // =====================================================
-    // 게시글 이미지 목록 조회
+    // 7. 게시글 이미지 목록 조회
     // =====================================================
 
     @Operation(
             summary = "게시글 이미지 목록 조회",
-            description = "특정 게시글에 등록된 이미지 목록을 조회합니다."
+            description = "특정 게시글에 등록된 이미지 목록을 " +
+                    "이미지 ID 오름차순으로 조회합니다."
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "이미지 목록 조회 성공"
-    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "이미지 목록 조회 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "게시글 ID 형식 오류 (TYPE_MISMATCH)"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "게시글을 찾을 수 없음 (HTTP_404)"
+            )
+    })
     @GetMapping("/{id}/images")
     public List<PostImageResponse> getPostImages(
-            @Parameter(description = "게시글 ID", example = "1")
+
+            @Parameter(
+                    description = "이미지를 조회할 게시글 ID",
+                    example = "1"
+            )
             @PathVariable Long id
     ) {
-        // 이미지 목록을 조회하고 응답 DTO로 변환
+
+        // 게시글 존재 여부 확인 후 이미지 목록 조회
         return postImageService.findImagesByPostId(id)
                 .stream()
                 .map(PostImageResponse::from)
@@ -295,33 +417,59 @@ public class PostController {
     }
 
     // =====================================================
-    // 게시글 이미지 삭제
+    // 8. 게시글 이미지 삭제
     // =====================================================
 
     @Operation(
             summary = "게시글 이미지 삭제",
-            description = "게시글 작성자가 특정 이미지를 삭제합니다.",
+            description = "게시글 작성자가 특정 이미지를 삭제합니다. " +
+                    "다른 게시글에 속한 이미지는 삭제할 수 없습니다.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "이미지 삭제 성공"),
-            @ApiResponse(responseCode = "401", description = "JWT 인증 필요"),
-            @ApiResponse(responseCode = "403", description = "작성자 권한 없음"),
-            @ApiResponse(responseCode = "404", description = "게시글 또는 이미지를 찾을 수 없음")
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "이미지 삭제 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "게시글 또는 이미지 ID 형식 오류 (TYPE_MISMATCH), " +
+                            "다른 게시글에 속한 이미지 삭제 요청 (HTTP_400)"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "JWT 인증 필요"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "게시글 작성자 권한 없음 (HTTP_403)"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "게시글 또는 이미지를 찾을 수 없음 (HTTP_404)"
+            )
     })
     @DeleteMapping("/{postId}/images/{imageId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePostImage(
-            @Parameter(description = "게시글 ID", example = "1")
+
+            @Parameter(
+                    description = "게시글 ID",
+                    example = "1"
+            )
             @PathVariable Long postId,
 
-            @Parameter(description = "삭제할 이미지 ID", example = "5")
+            @Parameter(
+                    description = "삭제할 이미지 ID",
+                    example = "5"
+            )
             @PathVariable Long imageId,
 
             @Parameter(hidden = true)
             Authentication authentication
     ) {
-        // 로그인 사용자의 작성자 권한 확인 후 이미지 삭제
+
+        // 게시글 작성자 및 이미지 소속 여부 확인 후 삭제
         postImageService.deleteImage(
                 postId,
                 imageId,
@@ -330,26 +478,34 @@ public class PostController {
     }
 
     // =====================================================
-    // 여러 게시글의 좋아요 수 일괄 조회
+    // 9. 여러 게시글의 좋아요 수 일괄 조회
     // =====================================================
 
     @Operation(
             summary = "게시글 좋아요 수 일괄 조회",
             description = "여러 게시글 ID를 전달하여 좋아요 수를 한 번에 조회합니다."
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "좋아요 수 조회 성공"
-    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "좋아요 수 조회 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "게시글 ID 목록의 형식 오류 (TYPE_MISMATCH)"
+            )
+    })
     @GetMapping("/counts")
     public Map<Long, Long> getLikeCounts(
+
             @Parameter(
-                    description = "조회할 게시글 ID 목록",
+                    description = "조회할 게시글 ID 목록 (쉼표로 구분)",
                     example = "1,2,3"
             )
             @RequestParam List<Long> postIds
     ) {
-        // 게시글 ID 목록에 대한 좋아요 수 조회
+
+        // 게시글 ID 목록에 대한 좋아요 수 일괄 조회
         Map<Long, Long> likeCounts =
                 postLikeService.getLikeCounts(postIds);
 
@@ -363,10 +519,12 @@ public class PostController {
     }
 
     // =====================================================
-    // 게시글 생성 및 수정 요청 DTO
+    // 게시글 작성 및 수정 요청 DTO
     // =====================================================
 
-    @Schema(description = "게시글 작성 및 수정 요청")
+    @Schema(
+            description = "게시글 작성 및 수정 요청"
+    )
     public record PostRequest(
 
             @Schema(
@@ -376,7 +534,10 @@ public class PostController {
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotBlank(message = "제목은 필수입니다.")
-            @Size(max = 200, message = "제목은 200자 이하여야 합니다.")
+            @Size(
+                    max = 200,
+                    message = "제목은 200자 이하여야 합니다."
+            )
             String title,
 
             @Schema(
@@ -393,10 +554,15 @@ public class PostController {
     // 게시글 이미지 응답 DTO
     // =====================================================
 
-    @Schema(description = "게시글 이미지 정보")
+    @Schema(
+            description = "게시글 이미지 정보"
+    )
     public record PostImageResponse(
 
-            @Schema(description = "이미지 ID", example = "1")
+            @Schema(
+                    description = "이미지 ID",
+                    example = "1"
+            )
             Long id,
 
             @Schema(
@@ -411,8 +577,10 @@ public class PostController {
             )
             String originalFilename
     ) {
+
         // 이미지 엔티티를 응답 DTO로 변환
         public static PostImageResponse from(PostImage image) {
+
             return new PostImageResponse(
                     image.getId(),
                     image.getImagePath(),

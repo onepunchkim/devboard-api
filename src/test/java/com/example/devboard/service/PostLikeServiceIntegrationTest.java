@@ -3,6 +3,8 @@ package com.example.devboard.service;
 import com.example.devboard.entity.Member;
 import com.example.devboard.entity.Post;
 import com.example.devboard.entity.PostLike;
+import com.example.devboard.exception.BusinessException;
+import com.example.devboard.exception.ErrorCode;
 import com.example.devboard.repository.MemberRepository;
 import com.example.devboard.repository.PostLikeRepository;
 import com.example.devboard.repository.PostRepository;
@@ -87,8 +89,8 @@ class PostLikeServiceIntegrationTest {
         assertThatThrownBy(() ->
                 postLikeService.likePost(member.getId(), post.getId())
         )
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("이미 좋아요를 누른 게시글 입니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.LIKE_ALREADY_EXISTS.getMessage());
 
         assertThat(postLikeRepository.countByPostId(post.getId()))
                 .isEqualTo(1);
@@ -211,8 +213,8 @@ class PostLikeServiceIntegrationTest {
         assertThatThrownBy(() ->
                 postLikeService.likePost(-1L, post.getId())
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("회원을 찾을 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     // ==========================================
@@ -225,8 +227,8 @@ class PostLikeServiceIntegrationTest {
         assertThatThrownBy(() ->
                 postLikeService.likePost(member.getId(), -1L)
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("게시글을 찾을 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.POST_NOT_FOUND.getMessage());
     }
 
     // ==========================================
@@ -240,8 +242,8 @@ class PostLikeServiceIntegrationTest {
         assertThatThrownBy(() ->
                 postLikeService.unlikePost(-1L, post.getId())
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("회원을 찾을 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     // ==========================================
@@ -254,8 +256,8 @@ class PostLikeServiceIntegrationTest {
         assertThatThrownBy(() ->
                 postLikeService.unlikePost(member.getId(), -1L)
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("게시글을 찾을 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.POST_NOT_FOUND.getMessage());
     }
 
     // ==========================================
@@ -272,8 +274,8 @@ class PostLikeServiceIntegrationTest {
                         post.getId()
                 )
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("좋아요 기록이 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.LIKE_NOT_FOUND.getMessage());
     }
 
     // ==========================================
@@ -284,8 +286,8 @@ class PostLikeServiceIntegrationTest {
         assertThatThrownBy(() ->
                 postLikeService.getLikeCount(-1L)
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("게시글을 찾을 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.POST_NOT_FOUND.getMessage());
     }
 
     // ==========================================
@@ -312,8 +314,8 @@ class PostLikeServiceIntegrationTest {
         assertThatThrownBy(() ->
                 postLikeService.hasLiked(member.getId(), -1L)
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("게시글을 찾을 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.POST_NOT_FOUND.getMessage());
     }
 
     // ==========================================
@@ -330,8 +332,8 @@ class PostLikeServiceIntegrationTest {
                         post.getId()
                 )
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("회원을 찾을 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     // ==========================================
@@ -348,8 +350,8 @@ class PostLikeServiceIntegrationTest {
                         post.getId()
                 )
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("회원을 찾을 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     // ==========================================
@@ -366,8 +368,8 @@ class PostLikeServiceIntegrationTest {
                         post.getId()
                 )
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("회원을 찾을 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
 }
