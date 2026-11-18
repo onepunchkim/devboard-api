@@ -5,20 +5,39 @@ import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
+import java.util.Set;
 
 @Configuration
 public class GlobalErrorOpenApiConfig {
 
+    // 공통 오류 응답에 해당하는 HTTP 상태 코드
+    private static final Set<String> ERROR_STATUS_CODES = Set.of(
+            "400",
+            "401",
+            "403",
+            "404",
+            "409",
+            "500"
+    );
+
+    // ErrorResponse 공통 스키마 참조 경로
+    private static final String ERROR_SCHEMA_REF =
+            "#/components/schemas/ErrorResponse";
+
     /**
-     * Swagger 문서에 공통 오류 응답을 등록한다.
+     * Swagger/OpenAPI 문서에 공통 오류 응답 스키마를 연결한다.
      *
-     * 실제 예외 처리는 GlobalExceptionHandler가 담당한다.
-     * 이 설정은 API 문서만 변경한다.
+     * 1. ErrorResponse 스키마 등록
+     * 2. 기존 API 오류 응답에 스키마 연결
+     * 3. 기존 설명과 정상 응답 유지
+     *
+     * 실제 HTTP 예외 처리 동작은 변경하지 않는다.
      */
     @Bean
     public OpenApiCustomizer globalErrorResponses() {
@@ -36,57 +55,18 @@ public class GlobalErrorOpenApiConfig {
                 openApi.setComponents(components);
             }
 
-            // ErrorResponse DTO를 공통 스키마로 등록
-            Schema<?> errorSchema = new Schema<>()
-                    .type("object")
-                    .description("DevBoard 공통 오류 응답");
+            // 다른 설정에서 이미 등록한 스키마는 덮어쓰지 않음
+            if (!components.getSchemas()
+                    .containsKey("ErrorResponse")) {
 
-            errorSchema.addProperty(
-                    "status",
-                    new Schema<Integer>()
-                            .type("integer")
-                            .example(400)
-                            .description("HTTP 상태 코드")
-            );
-
-            errorSchema.addProperty(
-                    "code",
-                    new Schema<String>()
-                            .type("string")
-                            .example("INVALID_INPUT")
-                            .description("오류 식별 코드")
-            );
-
-            errorSchema.addProperty(
-                    "message",
-                    new Schema<String>()
-                            .type("string")
-                            .example("잘못된 요청입니다.")
-                            .description("오류 메시지")
-            );
-
-            errorSchema.addProperty(
-                    "errors",
-                    new Schema<Map<String, String>>()
-                            .type("object")
-                            .description("입력값 검증 오류 상세 정보")
-            );
-
-            errorSchema.addProperty(
-                    "timestamp",
-                    new Schema<String>()
-                            .type("string")
-                            .format("date-time")
-                            .description("오류 발생 시각")
-            );
-
-            components.addSchemas(
-                    "ErrorResponse",
-                    errorSchema
-            );
+                components.addSchemas(
+                        "ErrorResponse",
+                        createErrorSchema()
+                );
+            }
 
             // =================================================
-            // 2. API별 공통 오류 응답 등록
+            // 2. API별 기존 오류 응답에 스키마 연결
             // =================================================
 
             if (openApi.getPaths() == null) {
@@ -97,87 +77,149 @@ public class GlobalErrorOpenApiConfig {
 
                     pathItem.readOperations().forEach(operation -> {
 
-                        ApiResponses responses = operation.getResponses();
+                        ApiResponses responses =
+                                operation.getResponses();
 
                         if (responses == null) {
-                            responses = new ApiResponses();
-                            operation.setResponses(responses);
+                            return;
                         }
 
-                        // 기존 API 문서에 등록된 응답은 유지한다.
-                        // 없는 응답만 추가한다.
-                        addErrorResponse(
-                                responses,
-                                "400",
-                                "잘못된 요청"
-                        );
+                        // 기존에 선언된 오류 응답만 검사
+                        responses.forEach((statusCode, response) -> {
 
-                        addErrorResponse(
-                                responses,
-                                "401",
-                                "인증이 필요합니다."
-                        );
+                            // 공통 오류 응답 대상이 아니면 건너뜀
+                            if (!ERROR_STATUS_CODES.contains(statusCode)) {
+                                return;
+                            }
 
-                        addErrorResponse(
-                                responses,
-                                "403",
-                                "접근 권한이 없습니다."
-                        );
-
-                        addErrorResponse(
-                                responses,
-                                "404",
-                                "요청한 데이터를 찾을 수 없습니다."
-                        );
-
-                        addErrorResponse(
-                                responses,
-                                "409",
-                                "요청 상태 충돌"
-                        );
-
-                        addErrorResponse(
-                                responses,
-                                "500",
-                                "서버 내부 오류"
-                        );
+                            // 기존 오류 응답에 JSON 스키마 연결
+                            attachErrorSchema(response);
+                        });
                     })
             );
         };
     }
 
     // =====================================================
-    // 공통 오류 응답 생성
+    // 공통 오류 응답 스키마 생성
     // =====================================================
 
-    private void addErrorResponse(
-            ApiResponses responses,
-            String statusCode,
-            String description
-    ) {
+    /**
+     * ErrorResponse record와 동일한 필드 구조를 정의한다.
+     */
+    private Schema<?> createErrorSchema() {
 
-        // 이미 등록된 HTTP 응답은 덮어쓰지 않음
-        if (responses.containsKey(statusCode)) {
+        Schema<Object> errorSchema = new Schema<>();
+
+        errorSchema.setType("object");
+        errorSchema.setDescription(
+                "DevBoard API 공통 오류 응답"
+        );
+
+        // HTTP 상태 코드
+        errorSchema.addProperty(
+                "status",
+                new Schema<Integer>()
+                        .type("integer")
+                        .example(400)
+                        .description("HTTP 상태 코드")
+        );
+
+        // 애플리케이션 오류 코드
+        errorSchema.addProperty(
+                "code",
+                new Schema<String>()
+                        .type("string")
+                        .example("INVALID_INPUT")
+                        .description("오류 식별 코드")
+        );
+
+        // 사용자에게 전달할 오류 메시지
+        errorSchema.addProperty(
+                "message",
+                new Schema<String>()
+                        .type("string")
+                        .example("잘못된 요청입니다.")
+                        .description("오류 메시지")
+        );
+
+        // 필드별 입력값 검증 오류
+        Schema<String> errorValueSchema = new Schema<>();
+        errorValueSchema.setType("string");
+
+        Schema<Map<String, String>> errorsSchema =
+                new Schema<>();
+
+        errorsSchema.setType("object");
+        errorsSchema.setDescription(
+                "입력값 검증 실패 시 필드별 오류 메시지. " +
+                        "일반 오류에서는 null"
+        );
+        errorsSchema.setAdditionalProperties(errorValueSchema);
+        errorsSchema.setNullable(true);
+
+        errorSchema.addProperty(
+                "errors",
+                errorsSchema
+        );
+
+        // 오류 발생 시각
+        errorSchema.addProperty(
+                "timestamp",
+                new Schema<String>()
+                        .type("string")
+                        .format("date-time")
+                        .example("2026-11-18T18:30:00")
+                        .description("오류 발생 시각")
+        );
+
+        return errorSchema;
+    }
+
+    // =====================================================
+    // 기존 오류 응답에 공통 스키마 연결
+    // =====================================================
+
+    /**
+     * 이미 선언된 오류 응답의 application/json에
+     * ErrorResponse 스키마를 연결한다.
+     *
+     * 기존 설명, 예시, 정상 응답은 유지한다.
+     */
+    private void attachErrorSchema(ApiResponse response) {
+
+        // 기존 응답에 Content가 없다면 생성
+        Content content = response.getContent();
+
+        if (content == null) {
+            content = new Content();
+            response.setContent(content);
+        }
+
+        // application/json 응답이 없다면 생성
+        io.swagger.v3.oas.models.media.MediaType mediaType =
+                content.get("application/json");
+
+        if (mediaType == null) {
+
+            mediaType =
+                    new io.swagger.v3.oas.models.media.MediaType();
+
+            content.addMediaType(
+                    "application/json",
+                    mediaType
+            );
+        }
+
+        // 이미 지정된 스키마는 덮어쓰지 않음
+        if (mediaType.getSchema() != null) {
             return;
         }
 
-        // ErrorResponse 공통 스키마 참조
+        // 공통 오류 응답 스키마 참조
         Schema<?> schema = new Schema<>()
-                .$ref("#/components/schemas/ErrorResponse");
+                .$ref(ERROR_SCHEMA_REF);
 
-        ApiResponse response = new ApiResponse()
-                .description(description)
-                .content(
-                        new Content().addMediaType(
-                                "application/json",
-                                new io.swagger.v3.oas.models.media.MediaType()
-                                        .schema(schema)
-                        )
-                );
-
-        responses.addApiResponse(
-                statusCode,
-                response
-        );
+        mediaType.setSchema(schema);
     }
 }
