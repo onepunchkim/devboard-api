@@ -13,7 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.BadCredentialsException;
+import com.example.devboard.exception.BusinessException;
+import com.example.devboard.exception.ErrorCode;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -91,10 +92,13 @@ class MemberServiceTest {
         when(memberRepository.existsByEmail(email)).thenReturn(true);
 
         // when & then
-        assertThrows(
-                IllegalArgumentException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> memberService.signup(request)
         );
+
+        // 공통 오류 코드에 정의된 메시지와 일치하는지 확인
+        assertEquals(ErrorCode.DUPLICATE_EMAIL.getMessage(), exception.getMessage());
 
         // 중복 이메일이면 비밀번호 암호화와 저장을 수행하지 않아야 함
         verify(passwordEncoder, never()).encode(anyString());
@@ -134,10 +138,13 @@ class MemberServiceTest {
         when(memberRepository.findByEmail(email)).thenReturn(Optional.empty());
 
         // when & then
-        assertThrows(
-                BadCredentialsException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> memberService.login(request)
         );
+
+        // 공통 오류 코드에 정의된 메시지와 일치하는지 확인
+        assertEquals(ErrorCode.INVALID_CREDENTIALS.getMessage(), exception.getMessage());
 
         verify(passwordEncoder, never()).matches(anyString(), anyString());
         verify(jwtService, never()).generateToken(anyLong(), anyString());
@@ -154,10 +161,13 @@ class MemberServiceTest {
                 .thenReturn(false);
 
         // when & then
-        assertThrows(
-                BadCredentialsException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> memberService.login(request)
         );
+
+        // 공통 오류 코드에 정의된 메시지와 일치하는지 확인
+        assertEquals(ErrorCode.INVALID_CREDENTIALS.getMessage(), exception.getMessage());
 
         // 비밀번호가 틀리면 JWT를 발급하지 않아야 함
         verify(jwtService, never()).generateToken(anyLong(), anyString());
@@ -222,10 +232,13 @@ class MemberServiceTest {
                 new MemberWithdrawalRequest("wrongPassword");
 
         // when & then
-        assertThrows(
-                BadCredentialsException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> memberService.withdraw(email, request)
         );
+
+        // 공통 오류 코드에 정의된 메시지와 일치하는지 확인
+        assertEquals(ErrorCode.INVALID_CREDENTIALS.getMessage(), exception.getMessage());
 
         // 비밀번호가 틀리면 데이터 삭제가 실행되면 안 됨
         verify(commentRepository, never()).deleteByMemberId(anyLong());
@@ -244,10 +257,13 @@ class MemberServiceTest {
                 new MemberWithdrawalRequest(password);
 
         // when & then
-        assertThrows(
-                IllegalArgumentException.class,
+        BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> memberService.withdraw(email, request)
         );
+
+        // 공통 오류 코드에 정의된 메시지와 일치하는지 확인
+        assertEquals(ErrorCode.MEMBER_NOT_FOUND.getMessage(), exception.getMessage());
 
         // 회원이 없으면 비밀번호 확인이나 삭제가 실행되지 않아야 함
         verify(passwordEncoder, never()).matches(anyString(), anyString());

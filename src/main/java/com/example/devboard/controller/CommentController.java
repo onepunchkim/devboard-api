@@ -6,6 +6,9 @@ import com.example.devboard.service.CommentService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,7 +24,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-
 @Tag(
         name = "댓글 API",
         description = "댓글 작성, 목록 조회, 수정 및 삭제 API"
@@ -30,28 +32,43 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    // 댓글 서비스 생성자 주입
+    // =====================================================
+    // 생성자 주입
+    // =====================================================
+
     public CommentController(CommentService commentService) {
         this.commentService = commentService;
     }
 
     // =====================================================
-    // 댓글 작성
+    // 1. 댓글 작성 API
     // =====================================================
 
     @Operation(
             summary = "댓글 작성",
-            description = "로그인한 사용자가 특정 게시글에 댓글을 작성합니다.",
+            description = """
+                    로그인한 사용자가 특정 게시글에 댓글을 작성합니다.
+
+                    - JWT 인증이 필요합니다.
+                    - 댓글 내용은 Bean Validation으로 검증합니다.
+                    - 존재하지 않는 게시글에는 댓글을 작성할 수 없습니다.
+                    - 댓글 작성 성공 시 생성된 댓글 정보를 반환합니다.
+                    """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
-                    description = "댓글 작성 성공"
+                    description = "댓글 작성 성공",
+                    content = @Content(
+                            schema = @Schema(
+                                    implementation = CommentResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "댓글 입력값 검증 실패"
+                    description = "댓글 입력값 또는 게시글 ID 형식 오류"
             ),
             @ApiResponse(
                     responseCode = "401",
@@ -59,7 +76,7 @@ public class CommentController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "게시글을 찾을 수 없음"
+                    description = "게시글 또는 회원을 찾을 수 없음"
             )
     })
     @PostMapping("/posts/{postId}/comments")
@@ -68,38 +85,59 @@ public class CommentController {
 
             @Parameter(
                     description = "댓글을 작성할 게시글 ID",
-                    example = "1"
+                    example = "1",
+                    required = true
             )
             @PathVariable Long postId,
 
             // 댓글 작성 요청 DTO
             @Valid @RequestBody CommentCreateRequest request,
 
-            // Spring Security 인증 정보는 Swagger에서 숨김
+            // 인증 객체는 Swagger 입력란에서 숨김
             @Parameter(hidden = true)
             Authentication authentication
     ) {
 
-        // 로그인한 사용자 이메일을 전달하여 댓글 생성
+        // JWT에서 로그인한 사용자 이메일 조회
+        String email = authentication.getName();
+
+        // 댓글 작성 서비스 호출
         return commentService.createComment(
                 postId,
-                authentication.getName(),
+                email,
                 request
         );
     }
 
     // =====================================================
-    // 특정 게시글의 댓글 목록 조회
+    // 2. 댓글 목록 조회 API
     // =====================================================
 
     @Operation(
             summary = "댓글 목록 조회",
-            description = "특정 게시글에 등록된 댓글 목록을 조회합니다."
+            description = """
+                    특정 게시글에 작성된 댓글 목록을 조회합니다.
+
+                    - 댓글이 없으면 빈 목록을 반환합니다.
+                    - 조회 결과는 CommentResponse 배열입니다.
+                    - 게시글 존재 여부는 서비스에서 검증합니다.
+                    """
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "댓글 목록 조회 성공"
+                    description = "댓글 목록 조회 성공",
+                    content = @Content(
+                            array = @ArraySchema(
+                                    schema = @Schema(
+                                            implementation = CommentResponse.class
+                                    )
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "게시글 ID 형식 오류"
             ),
             @ApiResponse(
                     responseCode = "404",
@@ -111,32 +149,45 @@ public class CommentController {
 
             @Parameter(
                     description = "댓글을 조회할 게시글 ID",
-                    example = "1"
+                    example = "1",
+                    required = true
             )
             @PathVariable Long postId
     ) {
 
-        // 게시글 ID에 해당하는 댓글 목록 조회
+        // 게시글에 작성된 댓글 목록 조회
         return commentService.findComments(postId);
     }
 
     // =====================================================
-    // 댓글 수정
+    // 3. 댓글 수정 API
     // =====================================================
 
     @Operation(
             summary = "댓글 수정",
-            description = "댓글 작성자만 기존 댓글 내용을 수정할 수 있습니다.",
+            description = """
+                    로그인한 사용자가 자신이 작성한 댓글을 수정합니다.
+
+                    - JWT 인증이 필요합니다.
+                    - 댓글 작성자만 수정할 수 있습니다.
+                    - 댓글 내용은 Bean Validation으로 검증합니다.
+                    - 수정 성공 시 변경된 댓글 정보를 반환합니다.
+                    """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "댓글 수정 성공"
+                    description = "댓글 수정 성공",
+                    content = @Content(
+                            schema = @Schema(
+                                    implementation = CommentResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "댓글 입력값 검증 실패"
+                    description = "댓글 입력값 또는 댓글 ID 형식 오류"
             ),
             @ApiResponse(
                     responseCode = "401",
@@ -144,11 +195,11 @@ public class CommentController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "댓글 작성자 권한 없음"
+                    description = "댓글 작성자가 아니므로 수정 권한 없음"
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "댓글을 찾을 수 없음"
+                    description = "댓글 또는 회원을 찾을 수 없음"
             )
     })
     @PutMapping("/comments/{commentId}")
@@ -156,39 +207,54 @@ public class CommentController {
 
             @Parameter(
                     description = "수정할 댓글 ID",
-                    example = "1"
+                    example = "1",
+                    required = true
             )
             @PathVariable("commentId") Long commentId,
 
             // 수정할 댓글 내용
             @Valid @RequestBody CommentCreateRequest request,
 
-            // 인증 정보는 Swagger 입력 항목에서 제외
+            // 인증 객체는 Swagger 입력란에서 숨김
             @Parameter(hidden = true)
             Authentication authentication
     ) {
 
-        // 댓글 ID, 사용자 이메일, 수정 내용을 서비스로 전달
+        // JWT에서 로그인한 사용자 이메일 조회
+        String email = authentication.getName();
+
+        // 댓글 작성자 권한 확인 후 수정
         return commentService.updateComment(
                 commentId,
-                authentication.getName(),
+                email,
                 request
         );
     }
 
     // =====================================================
-    // 댓글 삭제
+    // 4. 댓글 삭제 API
     // =====================================================
 
     @Operation(
             summary = "댓글 삭제",
-            description = "댓글 작성자만 자신의 댓글을 삭제할 수 있습니다.",
+            description = """
+                    로그인한 사용자가 자신이 작성한 댓글을 삭제합니다.
+
+                    - JWT 인증이 필요합니다.
+                    - 댓글 작성자만 삭제할 수 있습니다.
+                    - 삭제 성공 시 204 No Content를 반환합니다.
+                    """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "204",
-                    description = "댓글 삭제 성공"
+                    description = "댓글 삭제 성공",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "댓글 ID 형식 오류"
             ),
             @ApiResponse(
                     responseCode = "401",
@@ -196,11 +262,11 @@ public class CommentController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "댓글 작성자 권한 없음"
+                    description = "댓글 작성자가 아니므로 삭제 권한 없음"
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "댓글을 찾을 수 없음"
+                    description = "댓글 또는 회원을 찾을 수 없음"
             )
     })
     @DeleteMapping("/comments/{commentId}")
@@ -209,18 +275,23 @@ public class CommentController {
 
             @Parameter(
                     description = "삭제할 댓글 ID",
-                    example = "1"
+                    example = "1",
+                    required = true
             )
             @PathVariable Long commentId,
 
+            // 인증 객체는 Swagger 입력란에서 숨김
             @Parameter(hidden = true)
             Authentication authentication
     ) {
 
-        // 로그인한 사용자 이메일을 이용해 작성자 권한 확인 후 삭제
+        // JWT에서 로그인한 사용자 이메일 조회
+        String email = authentication.getName();
+
+        // 댓글 작성자 권한 확인 후 삭제
         commentService.deleteComment(
                 commentId,
-                authentication.getName()
+                email
         );
     }
 }

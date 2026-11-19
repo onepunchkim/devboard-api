@@ -12,10 +12,10 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
+import com.example.devboard.exception.BusinessException;
+import com.example.devboard.exception.ErrorCode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -207,11 +207,8 @@ class CommentServiceIntegrationTest {
                         createCommentRequest("다른 회원의 수정 시도")
                 )
         )
-                .isInstanceOf(ResponseStatusException.class)
-                .hasFieldOrPropertyWithValue(
-                        "status",
-                        HttpStatus.FORBIDDEN
-                );
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.COMMENT_ACCESS_DENIED.getMessage());
 
         // 댓글 내용이 변경되지 않았는지 확인
         entityManager.flush();
@@ -248,11 +245,8 @@ class CommentServiceIntegrationTest {
                         otherMember.getEmail()
                 )
         )
-                .isInstanceOf(ResponseStatusException.class)
-                .hasFieldOrPropertyWithValue(
-                        "status",
-                        HttpStatus.FORBIDDEN
-                );
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.COMMENT_ACCESS_DENIED.getMessage());
 
         // 댓글이 여전히 존재하는지 확인
         entityManager.flush();
@@ -277,14 +271,8 @@ class CommentServiceIntegrationTest {
                         createCommentRequest("댓글 작성 시도")
                 )
         )
-                .isInstanceOf(ResponseStatusException.class)
-                .satisfies(exception -> {
-                    ResponseStatusException responseException =
-                            (ResponseStatusException) exception;
-
-                    assertThat(responseException.getStatusCode())
-                            .isEqualTo(HttpStatus.NOT_FOUND);
-                });
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.POST_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -301,14 +289,8 @@ class CommentServiceIntegrationTest {
                         createCommentRequest("댓글 작성 시도")
                 )
         )
-                .isInstanceOf(ResponseStatusException.class)
-                .satisfies(exception -> {
-                    ResponseStatusException responseException =
-                            (ResponseStatusException) exception;
-
-                    assertThat(responseException.getStatusCode())
-                            .isEqualTo(HttpStatus.NOT_FOUND);
-                });
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -320,14 +302,8 @@ class CommentServiceIntegrationTest {
         assertThatThrownBy(() ->
                 commentService.findComments(missingPostId)
         )
-                .isInstanceOf(ResponseStatusException.class)
-                .satisfies(exception -> {
-                    ResponseStatusException responseException =
-                            (ResponseStatusException) exception;
-
-                    assertThat(responseException.getStatusCode())
-                            .isEqualTo(HttpStatus.NOT_FOUND);
-                });
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.POST_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -357,14 +333,8 @@ class CommentServiceIntegrationTest {
                         createCommentRequest("수정 시도")
                 )
         )
-                .isInstanceOf(ResponseStatusException.class)
-                .satisfies(exception -> {
-                    ResponseStatusException responseException =
-                            (ResponseStatusException) exception;
-
-                    assertThat(responseException.getStatusCode())
-                            .isEqualTo(HttpStatus.NOT_FOUND);
-                });
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.COMMENT_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -379,14 +349,8 @@ class CommentServiceIntegrationTest {
                         "test@test.com"
                 )
         )
-                .isInstanceOf(ResponseStatusException.class)
-                .satisfies(exception -> {
-                    ResponseStatusException responseException =
-                            (ResponseStatusException) exception;
-
-                    assertThat(responseException.getStatusCode())
-                            .isEqualTo(HttpStatus.NOT_FOUND);
-                });
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.COMMENT_NOT_FOUND.getMessage());
     }
 
 }

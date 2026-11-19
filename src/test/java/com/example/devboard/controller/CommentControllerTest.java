@@ -3,6 +3,8 @@ package com.example.devboard.controller;
 import com.example.devboard.dto.request.CommentCreateRequest;
 import com.example.devboard.dto.response.CommentResponse;
 import com.example.devboard.service.CommentService;
+import com.example.devboard.exception.BusinessException;
+import com.example.devboard.exception.ErrorCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -318,5 +320,111 @@ class CommentControllerTest {
                         .value("요청 본문이 올바른 JSON 형식이 아닙니다."));
 
         verifyNoInteractions(commentService);
+    }
+
+    // 10. 존재하지 않는 게시글에 댓글 작성 시 404
+    @Test
+    void createComment_missingPost_returnsNotFound() throws Exception {
+        when(commentService.createComment(eq(999L), eq("test@test.com"), any(CommentCreateRequest.class)))
+                .thenThrow(new BusinessException(ErrorCode.POST_NOT_FOUND));
+
+        mockMvc.perform(post("/api/posts/{postId}/comments", 999L)
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content": "댓글 작성 시도"}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(ErrorCode.POST_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.POST_NOT_FOUND.getMessage()));
+    }
+
+    // 11. 존재하지 않는 회원의 댓글 작성 시 404
+    @Test
+    void createComment_missingMember_returnsNotFound() throws Exception {
+        when(commentService.createComment(eq(1L), eq("test@test.com"), any(CommentCreateRequest.class)))
+                .thenThrow(new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        mockMvc.perform(post("/api/posts/{postId}/comments", 1L)
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content": "댓글 작성 시도"}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(ErrorCode.MEMBER_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
+    }
+
+    // 12. 존재하지 않는 게시글의 댓글 목록 조회 시 404
+    @Test
+    void findComments_missingPost_returnsNotFound() throws Exception {
+        when(commentService.findComments(999L))
+                .thenThrow(new BusinessException(ErrorCode.POST_NOT_FOUND));
+
+        mockMvc.perform(get("/api/posts/{postId}/comments", 999L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(ErrorCode.POST_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.POST_NOT_FOUND.getMessage()));
+    }
+
+    // 13. 존재하지 않는 댓글 수정 시 404
+    @Test
+    void updateComment_missingComment_returnsNotFound() throws Exception {
+        when(commentService.updateComment(eq(999L), eq("test@test.com"), any(CommentCreateRequest.class)))
+                .thenThrow(new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+
+        mockMvc.perform(put("/api/comments/{commentId}", 999L)
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content": "수정 시도"}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(ErrorCode.COMMENT_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.COMMENT_NOT_FOUND.getMessage()));
+    }
+
+    // 14. 다른 회원의 댓글 수정 시 403
+    @Test
+    void updateComment_otherMember_returnsForbidden() throws Exception {
+        when(commentService.updateComment(eq(10L), eq("test@test.com"), any(CommentCreateRequest.class)))
+                .thenThrow(new BusinessException(ErrorCode.COMMENT_ACCESS_DENIED));
+
+        mockMvc.perform(put("/api/comments/{commentId}", 10L)
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content": "수정 시도"}
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(ErrorCode.COMMENT_ACCESS_DENIED.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.COMMENT_ACCESS_DENIED.getMessage()));
+    }
+
+    // 15. 존재하지 않는 댓글 삭제 시 404
+    @Test
+    void deleteComment_missingComment_returnsNotFound() throws Exception {
+        doThrow(new BusinessException(ErrorCode.COMMENT_NOT_FOUND))
+                .when(commentService).deleteComment(999L, "test@test.com");
+
+        mockMvc.perform(delete("/api/comments/{commentId}", 999L)
+                        .principal(authentication))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(ErrorCode.COMMENT_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.COMMENT_NOT_FOUND.getMessage()));
+    }
+
+    // 16. 다른 회원의 댓글 삭제 시 403
+    @Test
+    void deleteComment_otherMember_returnsForbidden() throws Exception {
+        doThrow(new BusinessException(ErrorCode.COMMENT_ACCESS_DENIED))
+                .when(commentService).deleteComment(10L, "test@test.com");
+
+        mockMvc.perform(delete("/api/comments/{commentId}", 10L)
+                        .principal(authentication))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(ErrorCode.COMMENT_ACCESS_DENIED.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.COMMENT_ACCESS_DENIED.getMessage()));
     }
 }
