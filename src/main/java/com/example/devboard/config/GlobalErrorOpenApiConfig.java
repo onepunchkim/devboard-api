@@ -55,10 +55,16 @@ public class GlobalErrorOpenApiConfig {
                 openApi.setComponents(components);
             }
 
-            // 다른 설정에서 이미 등록한 스키마는 덮어쓰지 않음
-            if (!components.getSchemas()
-                    .containsKey("ErrorResponse")) {
+            // =====================================================
+            // ErrorResponse 스키마 등록
+            // =====================================================
 
+            // Components에 schemas가 아직 생성되지 않았을 수 있으므로
+            // null 여부를 먼저 확인한다.
+            if (components.getSchemas() == null
+                    || !components.getSchemas().containsKey("ErrorResponse")) {
+
+                // 기존 ErrorResponse 스키마가 없을 때만 등록
                 components.addSchemas(
                         "ErrorResponse",
                         createErrorSchema()
