@@ -452,4 +452,181 @@ class ChatImageServiceTest {
                 exception.getMessage()
         );
     }
+
+
+    // =====================================================
+    // 추가 1. JPEG 시그니처의 각 바이트 손상 검증
+    // =====================================================
+
+    @Test
+    void uploadRejectsCorruptedJpegSignatureBytes() {
+
+        // JPEG의 첫 3바이트를 하나씩 변경하여 검증
+        for (int i = 0; i < JPEG_HEADER.length; i++) {
+
+            byte[] corruptedHeader = JPEG_HEADER.clone();
+
+            // 정상 시그니처와 다른 값으로 변경
+            corruptedHeader[i] = 0x00;
+
+            MockMultipartFile file = createFile(
+                    "corrupted.jpg",
+                    corruptedHeader
+            );
+
+            // 잘못된 JPEG 시그니처는 업로드 거부
+            IllegalArgumentException exception =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> chatImageService.upload(file)
+                    );
+
+            assertEquals(
+                    "파일 확장자와 실제 이미지 형식이 일치하지 않습니다.",
+                    exception.getMessage()
+            );
+        }
+    }
+
+    // =====================================================
+    // 추가 2. PNG 시그니처의 각 바이트 손상 검증
+    // =====================================================
+
+    @Test
+    void uploadRejectsEveryCorruptedPngSignatureByte() {
+
+        // PNG 시그니처 8바이트를 각각 검증
+        for (int i = 0; i < PNG_HEADER.length; i++) {
+
+            byte[] corruptedHeader = PNG_HEADER.clone();
+
+            // 해당 위치의 바이트를 변경
+            corruptedHeader[i] = 0x00;
+
+            MockMultipartFile file = createFile(
+                    "corrupted.png",
+                    corruptedHeader
+            );
+
+            // 손상된 PNG 파일은 거부되어야 함
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> chatImageService.upload(file)
+            );
+        }
+    }
+
+    // =====================================================
+    // 추가 3. WEBP 시그니처의 각 바이트 손상 검증
+    // =====================================================
+
+    @Test
+    void uploadRejectsEveryCorruptedWebpSignatureByte() {
+
+        // WEBP 형식 식별에 사용되는 바이트 위치
+        int[] signaturePositions = {
+                0, 1, 2, 3, 8, 9, 10, 11
+        };
+
+        for (int position : signaturePositions) {
+
+            byte[] corruptedHeader = WEBP_HEADER.clone();
+
+            // RIFF 또는 WEBP 식별 바이트 변경
+            corruptedHeader[position] = 0x00;
+
+            MockMultipartFile file = createFile(
+                    "corrupted.webp",
+                    corruptedHeader
+            );
+
+            // 잘못된 WEBP 시그니처는 거부
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> chatImageService.upload(file)
+            );
+        }
+    }
+
+    // =====================================================
+    // 추가 4. 짧은 파일 헤더 검증
+    // =====================================================
+
+    @Test
+    void uploadRejectsTruncatedImageHeaders() {
+
+        // 빈 파일은 기존 테스트에서 검증했으므로
+        // 여기서는 1바이트 이상인 불완전한 헤더를 검사
+        for (int length = 1; length < 8; length++) {
+
+            byte[] shortHeader =
+                    java.util.Arrays.copyOf(PNG_HEADER, length);
+
+            MockMultipartFile file = createFile(
+                    "short.png",
+                    shortHeader
+            );
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> chatImageService.upload(file)
+            );
+        }
+    }
+
+    // =====================================================
+    // 추가 5. 대문자 이미지 확장자 업로드 검증
+    // =====================================================
+
+    @Test
+    void uploadAcceptsUppercaseExtension() {
+
+        // given: 대문자 PNG 확장자
+        MockMultipartFile file = createFile(
+                "photo.PNG",
+                PNG_HEADER
+        );
+
+        // when
+        String imageUrl = chatImageService.upload(file);
+
+        // then: 확장자가 소문자로 정규화되어 저장
+        assertTrue(imageUrl.endsWith(".png"));
+
+        String filename = imageUrl.substring(
+                imageUrl.lastIndexOf('/') + 1
+        );
+
+        assertTrue(
+                Files.isRegularFile(tempDir.resolve(filename))
+        );
+    }
+
+    // =====================================================
+    // 추가 6. 업로드 후 이미지 데이터 일치 검증
+    // =====================================================
+
+    @Test
+    void uploadedImageShouldBeReadableWithSameContent() {
+
+        // given
+        MockMultipartFile file = createFile(
+                "photo.png",
+                PNG_HEADER
+        );
+
+        // when: 이미지 업로드
+        String imageUrl = chatImageService.upload(file);
+
+        String filename = imageUrl.substring(
+                imageUrl.lastIndexOf('/') + 1
+        );
+
+        // 저장된 이미지 조회
+        byte[] result = chatImageService.readImage(filename);
+
+        // then: 업로드한 바이트와 조회한 바이트가 일치
+        assertArrayEquals(PNG_HEADER, result);
+    }
+
 }
