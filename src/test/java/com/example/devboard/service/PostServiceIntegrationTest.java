@@ -1,4 +1,4 @@
-package com.example.devboard;
+package com.example.devboard.service;
 
 import com.example.devboard.dto.response.PostResponse;
 import com.example.devboard.entity.Member;
