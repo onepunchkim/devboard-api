@@ -222,17 +222,50 @@ class PostControllerTest {
 
     @Test
     void getPostImages_success() throws Exception {
-        // given: 이미지가 없는 게시글 설정
-        when(postImageService.findImagesByPostId(1L))
-                .thenReturn(List.of());
 
-        // when & then: 이미지 목록이 빈 배열인지 확인
+        // given: 첫 번째 이미지 정보 생성
+        PostImage firstImage = mock(PostImage.class);
+
+        when(firstImage.getId()).thenReturn(1L);
+        when(firstImage.getImagePath())
+                .thenReturn("uploads/post-images/first.png");
+        when(firstImage.getOriginalFilename())
+                .thenReturn("first.png");
+
+        // 두 번째 이미지 정보 생성
+        PostImage secondImage = mock(PostImage.class);
+
+        when(secondImage.getId()).thenReturn(2L);
+        when(secondImage.getImagePath())
+                .thenReturn("uploads/post-images/second.png");
+        when(secondImage.getOriginalFilename())
+                .thenReturn("second.png");
+
+        // 이미지 서비스의 조회 결과 설정
+        when(postImageService.findImagesByPostId(1L))
+                .thenReturn(List.of(firstImage, secondImage));
+
+        // when & then: 이미지 목록 및 응답 필드 검증
         mockMvc.perform(get("/api/posts/1/images"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.length()").value(2))
 
-        // 게시글 ID가 이미지 서비스에 전달됐는지 확인
+                // 첫 번째 이미지 검증
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].imagePath")
+                        .value("uploads/post-images/first.png"))
+                .andExpect(jsonPath("$[0].originalFilename")
+                        .value("first.png"))
+
+                // 두 번째 이미지 검증
+                .andExpect(jsonPath("$[1].id").value(2))
+                .andExpect(jsonPath("$[1].imagePath")
+                        .value("uploads/post-images/second.png"))
+                .andExpect(jsonPath("$[1].originalFilename")
+                        .value("second.png"));
+
+        // 이미지 서비스 호출 검증
         verify(postImageService).findImagesByPostId(1L);
     }
 
@@ -260,13 +293,26 @@ class PostControllerTest {
                 eq("test@test.com")
         )).thenReturn(List.of(image));
 
-        // when & then: 요청에 인증 객체를 직접 지정
+        // when & then: 이미지 업로드 요청 및 응답 검증
         mockMvc.perform(multipart("/api/posts/1/images")
                         .file(file)
                         .principal(createAuthentication()))
                 .andExpect(status().isOk())
+
+                // 응답 배열 및 이미지 개수 확인
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+
+                // 이미지 ID 확인
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].originalFilename").value("test.png"));
+
+                // 이미지 저장 경로 확인
+                .andExpect(jsonPath("$[0].imagePath")
+                        .value("uploads/post-images/test.png"))
+
+                // 원본 파일명 확인
+                .andExpect(jsonPath("$[0].originalFilename")
+                        .value("test.png"));
 
         // 게시글 ID, 파일 목록, 작성자 이메일 전달 확인
         verify(postImageService).uploadImages(
