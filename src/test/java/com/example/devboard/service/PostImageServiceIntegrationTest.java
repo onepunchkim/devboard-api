@@ -8,11 +8,15 @@ import com.example.devboard.repository.PostImageRepository;
 import com.example.devboard.repository.PostRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,9 +25,12 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,6 +39,58 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ActiveProfiles("test")
 @Transactional
 class PostImageServiceIntegrationTest {
+
+    // 이 테스트 클래스에서만 사용하는 이미지 저장소
+    private static final Path UPLOAD_DIR = createTempUploadDirectory();
+
+    private static Path createTempUploadDirectory() {
+        try {
+            return Files.createTempDirectory("devboard-post-image-service-")
+                    .toAbsolutePath().normalize();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    // 테스트 환경의 이미지 저장 경로만 덮어쓴다.
+    @DynamicPropertySource
+    static void registerProperties(DynamicPropertyRegistry registry) {
+        registry.add("file.upload-dir", UPLOAD_DIR::toString);
+    }
+
+    // DB의 상대 경로에서 실제 파일 경로를 구한다.
+    private Path resolveImagePath(String imagePath) {
+        assertThat(imagePath).startsWith("uploads/post-images/");
+        return UPLOAD_DIR.resolve(Path.of(imagePath).getFileName()).normalize();
+    }
+
+    // DB 롤백과 별도로 실제 이미지 파일을 정리한다.
+    @AfterEach
+    void cleanUp() throws IOException {
+        cleanUploadDirectory();
+    }
+
+    private static void cleanUploadDirectory() throws IOException {
+        if (!Files.exists(UPLOAD_DIR)) {
+            return;
+        }
+        List<Path> targets;
+        try (Stream<Path> paths = Files.walk(UPLOAD_DIR)) {
+            targets = paths.filter(path -> !path.equals(UPLOAD_DIR))
+                    .sorted(Comparator.reverseOrder()).toList();
+        }
+        // Windows에서도 디렉터리 스트림을 닫은 뒤 삭제한다.
+        for (Path target : targets) {
+            Files.deleteIfExists(target);
+        }
+    }
+
+    @AfterAll
+    static void removeUploadDirectory() throws IOException {
+        cleanUploadDirectory();
+        Files.deleteIfExists(UPLOAD_DIR);
+    }
+
 
     @Autowired
     private PostImageService postImageService;
@@ -70,16 +129,12 @@ class PostImageServiceIntegrationTest {
                 10, 10, BufferedImage.TYPE_INT_RGB
         );
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        ImageIO.write(image, "png", outputStream);
-
-        return new MockMultipartFile(
-                "files",
-                filename,
-                "image/png",
-                outputStream.toByteArray()
-        );
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            assertThat(ImageIO.write(image, "png", outputStream)).isTrue();
+            return new MockMultipartFile(
+                    "files", filename, "image/png", outputStream.toByteArray()
+            );
+        }
     }
 
     @Test
@@ -114,12 +169,12 @@ class PostImageServiceIntegrationTest {
                 .isEqualTo(post.getId());
 
         // 실제 파일 저장 확인
-        Path filePath = Path.of("./build/test-uploads/post-images")
-                .toAbsolutePath()
-                .normalize()
-                .resolve(Path.of(savedImage.getImagePath()).getFileName());
+        Path filePath = resolveImagePath(savedImage.getImagePath());
 
         assertThat(Files.exists(filePath)).isTrue();
+        // 실제 저장된 바이트가 원본과 동일한지 확인
+        assertThat(Files.readAllBytes(filePath)).containsExactly(image.getBytes());
+        assertThat(savedImage.getCreatedAt()).isNotNull();
     }
 
     @Test
@@ -165,10 +220,7 @@ class PostImageServiceIntegrationTest {
 
         String imagePath = images.get(0).getImagePath();
 
-        Path filePath = Path.of("./build/test-uploads/post-images")
-                .toAbsolutePath()
-                .normalize()
-                .resolve(Path.of(imagePath).getFileName());
+        Path filePath = resolveImagePath(imagePath);
 
         assertThat(Files.exists(filePath)).isTrue();
 
@@ -249,6 +301,7 @@ class PostImageServiceIntegrationTest {
         // DB 이미지 정보 유지 확인
         assertThat(postImageRepository.existsById(image.getId()))
                 .isTrue();
+        assertThat(resolveImagePath(image.getImagePath())).exists();
     }
 
     @Test
@@ -505,6 +558,7 @@ class PostImageServiceIntegrationTest {
         // 원래 게시글의 이미지 정보가 유지되어야 한다.
         assertThat(postImageRepository.existsById(imageId))
                 .isTrue();
+        assertThat(resolveImagePath(images.get(0).getImagePath())).exists();
     }
 
 }
